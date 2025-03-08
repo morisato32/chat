@@ -1,0 +1,122 @@
+body {
+  background: radial-gradient(circle, #e91e63, #9c27b0, #673ab7, #3f51b5, #2196f3, #00bcd4, #009688, #4caf50, #8bc34a, #cddc39, #ffeb3b, #ffc107, #ff9800, #ff5722);
+  background-size: 400% 400%;
+  animation: cores 15s ease infinite;
+  margin: 0; /* Remove margens padrão do body */
+  display: flex;
+  justify-content: center; /* Centraliza o conteúdo horizontalmente */
+  align-items: center; /* Centraliza o conteúdo verticalmente */
+  min-height: 100vh; /* Garante que o fundo cubra toda a tela */
+  font-family: sans-serif; /* Define uma fonte padrão */
+}
+
+@keyframes cores {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.form {
+  background-color: rgba(255, 255, 255, 0.8); /* Fundo branco semi-transparente para o formulário */
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  width: 350px; /* Largura do formulário */
+}
+
+h1 {
+  color: #FFFFFF; /* Cor branca para o título */
+  font-family: 'Poppins', sans-serif; /* Fonte Poppins */
+  font-weight: 700; /* Peso da fonte em negrito */
+  text-align: center; /* Alinhamento centralizado */
+  margin-top: 20px; /* Espaçamento superior */
+  font-size: 28px;
+}
+
+h2{
+  color: #FFFFFF; /* Cor branca para o título */
+  font-family: 'Poppins', sans-serif; /* Fonte Poppins */
+  font-weight: 700; /* Peso da fonte em negrito */
+  text-align: center; /* Alinhamento centralizado */
+  margin-top: 20px; /* Espaçamento superior */
+  font-size: 70px;
+}
+
+p{
+  color: #FFFFFF; /* Cor branca para o título */
+  font-family: 'Poppins', sans-serif; /* Fonte Poppins */
+  font-weight: 700; /* Peso da fonte em negrito */
+  text-align: center; /* Alinhamento centralizado */
+  margin-top: 20px; /* Espaçamento superior */
+  font-size: 28px;
+}
+
+.errorMessage{
+  color: #FF0000; /* Cor vermelha para a mensagem de erro */
+  font-size: 15px;
+}
+
+.cadastroLogar{
+  font-size: 13px;
+  text-decoration: none;
+  
+}
+.cadastroLogar a{
+  margin-left: 10px;
+}
+
+
+
+
+
+#login-form label {
+  display: block; /* Labels em blocos para melhor organização */
+  margin-bottom: 5px;
+  color: #333; /* Cor do texto da label */
+}
+
+input {
+  width: calc(100% - 12px); /* Largura total menos o padding */
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+  outline: none;
+}
+
+button {
+  background-color: #646cff; /* Cor de fundo do botão */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Transição suave na cor de fundo */
+
+}
+
+button:hover {
+  background-color: #5057e6; /* Cor de fundo do botão ao passar o mouse */
+
+}
+
+/* pagina de chat */
+
+/* Nome do usuário no topo do chat */
+.userName {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff9800; /* Laranja vibrante */
+  text-align: center;
+  padding: 1rem;
+  text-transform: uppercase;
+  animation: glow 1.5s infinite alternate; /* Efeito de brilho */
+}
+

@@ -1,0 +1,55 @@
+/* Estilos para a Navbar */
+.containerNav {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between; /* Alinha os itens para as extremidades */
+    align-items: center; /* Alinha verticalmente */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: background 0.3s ease;
+  }
+  
+ 
+  
+  .containerNav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex; /* Garante que os links fiquem lado a lado */
+    align-items: center; /* Alinha verticalmente os links */
+  }
+  
+  .containerNav li {
+    margin-left: 2rem; /* Espaçamento entre os links */
+  }
+  
+  .containerNav a { /* Estilos para os links */
+    text-decoration: none;
+    color: white;
+    font-weight: 500;
+    transition: color 0.3s ease, transform 0.2s ease;
+    padding: 0.5rem 1rem; /* Adiciona padding aos links para melhor usabilidade */
+    border-radius: 5px; /* Bordas arredondadas (opcional) */
+  }
+  
+  .containerNav a:hover {
+    color: #f0f0f0;
+    transform: translateY(-2px);
+    background-color: rgba(255, 255, 255, 0.1); /* Background sutil ao passar o mouse */
+  }
+  
+  /* Estilos responsivos (opcional) */
+  @media (max-width: 768px) {
+    .containerNav ul {
+      flex-direction: column;
+      text-align: center;
+    }
+  
+    .containerNav li {
+      margin: 1rem 0;
+      margin-left: 0;
+    }
+  }
+ 

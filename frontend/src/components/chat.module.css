@@ -1,0 +1,139 @@
+/* Estilizando o fundo da tela de chat */
+.container {
+  background: linear-gradient(to bottom, #e6e6ea, #d1d1db); /* Degradê suave */
+  min-height: 100vh; /* Garante que cubra toda a tela */
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Mantém o input sempre no final */
+}
+
+/* Lista de mensagens */
+.messages {
+  list-style-type: none;
+  margin: 0;
+  padding: 1rem;
+  overflow-y: auto; /* Permite rolagem */
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Mensagens enviadas e recebidas */
+.messages > li {
+  padding: 0.8rem;
+  border-radius: 15px;
+  max-width: 60%; /* Evita que a mensagem ocupe toda a largura */
+  word-wrap: break-word;
+  display: flex;
+  font-size: 20px;
+}
+
+/* Mensagens do usuário (próprias) */
+.messages > li.sent {
+  background: #4caf50; /* Verde moderno */
+  color: white;
+  max-width: 10vw;
+  align-self: flex-end; /* Alinha à direita */
+  margin-right: 10%;
+  display: flex;
+  flex-wrap: wrap;
+  
+}
+
+/* Mensagens recebidas */
+.messages > li.received {
+  background: #f1f1f1; /* Cinza claro */
+  color: #333;
+  align-self: flex-start; /* Alinha à esquerda */
+  text-align: left;
+  justify-content: flex-start;
+  max-width: 10vw;
+  margin-left: 40%;
+  display: flex;
+flex-wrap: wrap;
+}
+
+.messages > li > p{
+  font-size: 14px;
+}
+
+.messages > li > span{
+  font-size: 14px;
+}
+
+
+
+
+/* Barra de entrada fixa com efeito moderno */
+.form {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+/* Campo de entrada */
+.input {
+  border: none;
+  padding: 0.75rem;
+  flex-grow: 1;
+  border-radius: 25px;
+  margin: 0.25rem;
+  font-size: 1rem;
+  background: #fff;
+  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.input:focus {
+  outline: none;
+}
+
+/* Botão de envio */
+.form > button {
+  background: #007bff; /* Azul moderno */
+  border: none;
+  padding: 0.75rem 1.5rem;
+  margin: 0.25rem;
+  border-radius: 25px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.form > button:hover {
+  background: #0056b3;
+}
+
+/* Nome do usuário no topo do chat */
+.userName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: "Poppins", sans-serif;
+  color: #00eaff; /* Azul neon */
+  text-align: center;
+  padding: 1rem;
+  text-transform: capitalize;
+  animation: neonGlow 1.5s infinite alternate; /* Efeito de brilho neon */
+}
+
+/* Efeito de brilho neon */
+@keyframes neonGlow {
+  from {
+    text-shadow: 0 0 5px #00eaff, 0 0 10px #00eaff, 0 0 15px #007bff;
+  }
+  to {
+    text-shadow: 0 0 10px #007bff, 0 0 20px #00eaff, 0 0 30px #007bff;
+  }
+}
+
+
+
