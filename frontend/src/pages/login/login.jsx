@@ -18,11 +18,14 @@ function Login() {
         email: email.current.value,
         senha: senha.current.value,
       });
+      console.log(response.data)
 
-      // Verifica se a resposta da API contém os dados do usuário e se o status está correto
-      if (response.status === 200 && response.data) {
-        // Redireciona para a página do chat passando o nome do usuário
-        navigate("/chat", { state: { name: response.data.name } });
+       // Verifica se a resposta da API contém o token
+       if (response.data.token) {
+        // Armazena o token e outras informações do usuário
+        sessionStorage.setItem("user", JSON.stringify(response.data));
+        // Redireciona para a página do chat
+        navigate("/chat");
       } else {
         setError("Falha ao realizar login. Verifique seus dados.");
       }
