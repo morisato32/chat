@@ -1,17 +1,28 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-function BoasVindas() {
-const nomeUsuario = sessionStorage.getItem('name')
 
-    return (
-        <div>
-            <h1>Bem vindo {nomeUsuario} entre no <Link to='/chat'>batePapo</Link></h1>
 
-            
-        </div>
-    );
-}
+const BoasVindas = () => {
+ 
+  
+  const [user, setUser] = useState(null);
+  
+
+  useEffect(() => {
+    // Recupera o usuário logado do sessionStorage
+    const storedUser = sessionStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+   }, []);
+  return (
+    <div>
+      <h1>Bem-vindo, {user?.name} vamos bater um <Link to = '/chat'>Papo</Link></h1>
+     
+    </div>
+  );
+};
 
 export default BoasVindas;

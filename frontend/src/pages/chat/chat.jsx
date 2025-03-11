@@ -1,6 +1,6 @@
 import styles from "../../components/chat.module.css";
 import io from "socket.io-client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const socket = io("http://localhost:5000");
 
@@ -8,21 +8,24 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
-  // Pegando nome e ID do usuário da sessão
-  const nomeUsuario = sessionStorage.getItem("name");
-  const userId = sessionStorage.getItem("userId"); // Adicione isso no login para salvar o ID
+  // Pegando os dados do usuário da sessão
+  const userString = sessionStorage.getItem("user");
+  const user = userString ? JSON.parse(userString) : null;
+  const userId = user ? user.id : null;
+  const userName = user ? user.name : "Usuário Desconhecido";
 
-  // Carregar mensagens antigas ao entrar no chat
+  console.log("Usuário logado:", user);
+
   useEffect(() => {
     socket.emit("requestMessages");
 
     socket.on("loadMessages", (loadedMessages) => {
+      console.log("Mensagens carregadas:", loadedMessages);
       setMessages(loadedMessages);
     });
 
     socket.on("receiveMessage", (message) => {
-      console.log("Mensagem recebida:", message); // Veja a estrutura real no console
-      console.log(message.user)
+      console.log("Mensagem recebida:", message);
       setMessages((prevMessages) => [...prevMessages, message]);
     });
 
@@ -32,37 +35,26 @@ function Chat() {
     };
   }, []);
 
-  // Enviar mensagem para o servidor
   const sendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      socket.emit("sendMessage", {
-        conteudo: newMessage,
-        userId: userId, // Agora enviando o ID correto
-      });
+      socket.emit("sendMessage", { conteudo: newMessage, userId });
       setNewMessage(""); // Limpar campo de entrada
     }
   };
 
   return (
     <div className={styles.container}>
-      <p className={styles.userName}>
-        {nomeUsuario} <span>batendo papo...</span>
-      </p>
+      <h2 className={styles.userName}>{userName} batendo papo...</h2>
 
       <ul className={styles.messages}>
-        {messages.map((message, index) => (
+        {messages.map((msg, index) => (
           <li
             key={index}
-            className={message.userId === userId ? styles.sent : styles.received}
+            className={msg.userId === userId ? styles.sent : styles.received}
           >
-            {/* Certifique-se de que mmessage.user existe antes de acessar .name */}
-            <span className={styles.senderName}>
-            <span>{message.user && message.user.name ? message.user.name : "Desconhecido"}</span>
-
-             
-            </span>
-            <p>{message.conteudo}</p>
+            <span>{msg.user?.name || "Desconhecido"}</span>
+            <p>{msg.conteudo}</p>
           </li>
         ))}
       </ul>

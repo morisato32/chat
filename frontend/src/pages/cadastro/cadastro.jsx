@@ -9,7 +9,7 @@ function Cadastro() {
   const name = useRef();
   const email = useRef();
   const senha = useRef();
-  
+
   const [error, setError] = useState(null); // Estado para armazenar mensagens de erro
 
   async function createUsers(e) {
@@ -22,16 +22,20 @@ function Cadastro() {
         email: email.current.value,
         senha: senha.current.value,
       });
+     
 
       if (response.data.token && response.data.name) {
-        sessionStorage.setItem('token', response.data.token); // Armazena o token
-        sessionStorage.setItem('name', response.data.name); // Armazena o nome
-        sessionStorage.setItem('userId',response.data.userId) // Armazena usuario
+        const userData = {
+          token: response.data.token,
+          name: response.data.name,
+          id: response.data.userId,
+        };
+       
+       
+
+        sessionStorage.setItem("user", JSON.stringify(userData)); // Salva o objeto inteiro como string JSON
         navigate("/boasvindas");
       }
-     
-     
-      
     } catch (error) {
       if (error.response.status === 400) {
         setError("Este email já está cadastrado. Por favor, tente outro.");
@@ -66,7 +70,6 @@ function Cadastro() {
           ref={senha}
         />
         <p className="cadastroLogar">
-          
           Já tem uma conta? Faça.<Link to="/login">login</Link>
         </p>
 
