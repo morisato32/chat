@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between; /* Mantém o input sempre no final */
+
 }
 
 /* Lista de mensagens */
@@ -20,51 +21,64 @@
   gap: 0.5rem;
 }
 
-/* Mensagens enviadas e recebidas */
-.messages > li {
-  padding: 0.8rem;
-  border-radius: 15px;
-  max-width: 60%; /* Evita que a mensagem ocupe toda a largura */
-  word-wrap: break-word;
-  display: flex;
-  font-size: 20px;
+.messages > li.sent {
+  background: linear-gradient(135deg, #bbdefb, #90caf9); /* Gradiente suave de azul */
+  color: #1976d2; /* Azul escuro para o texto */
+  align-self: flex-end; /* Alinha à direita */
+  text-align: right;
+  justify-content: flex-end;
+  max-width: 70%; /* Ajustado para melhor legibilidade */
+  margin-bottom: 10px; /* Adicionado margem inferior para separar as mensagens */
+  border-radius: 18px; /* Bordas arredondadas para um visual mais suave */
+  padding: 12px 18px; /* Padding interno para melhor espaçamento */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidade */
+  word-wrap: break-word; /* Quebra palavras longas */
+  display: inline-block;
+  margin-right: 50px; /* diminuindo o espaçamento da margem direita */
 }
 
-/* Mensagens do usuário (próprias) */
-.messages > li.sent {
-  background: #4caf50; /* Verde moderno */
-  color: white;
-  max-width: 10vw;
-  align-self: flex-end; /* Alinha à direita */
-  margin-right: 10%;
-  display: flex;
-  flex-wrap: wrap;
-  
+.messages > li.sent > p {
+  font-size: 16px; /* Aumentado para melhor legibilidade */
+  line-height: 1.5; /* Espaçamento entre linhas para conforto visual */
+  margin-bottom: 5px; /* Margem inferior para separar parágrafos */
+}
+
+.messages > li.sent > span {
+  font-size: 12px; /* Reduzido para um visual mais sutil */
+  color: #666; /* Cor mais suave para o span */
+  display: block; /* Garante que o span fique em uma nova linha */
+  margin-top: 5px; /* Margem superior para separar do parágrafo */
 }
 
 /* Mensagens recebidas */
 .messages > li.received {
-  background: #f1f1f1; /* Cinza claro */
-  color: #333;
-  align-self: flex-start; /* Alinha à esquerda */
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9); /* Gradiente suave de verde claro */
+  color: #2e7d32; /* Verde escuro para o texto */
+  align-self: flex-start;
   text-align: left;
   justify-content: flex-start;
-  max-width: 10vw;
-  margin-left: 40%;
-  display: flex;
-flex-wrap: wrap;
+  max-width: 70%; /* Ajustado para melhor legibilidade */
+  margin-bottom: 10px; /* Adicionado margem inferior para separar as mensagens */
+  border-radius: 18px; /* Bordas arredondadas para um visual mais suave */
+  padding: 12px 18px; /* Padding interno para melhor espaçamento */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidade */
+  word-wrap: break-word; /* Quebra palavras longas */
+  display: inline-block; /* adapta o tamanho ao conteudo*/
+  margin-left: 50px;/* diminuindo o espaçamento da margem esquerda*/
 }
 
-.messages > li > p{
-  font-size: 14px;
+.messages > li > p {
+  font-size: 16px; /* Aumentado para melhor legibilidade */
+  line-height: 1.5; /* Espaçamento entre linhas para conforto visual */
+  margin-bottom: 5px; /* Margem inferior para separar parágrafos */
 }
 
-.messages > li > span{
-  font-size: 14px;
+.messages > li > span {
+  font-size: 12px; /* Reduzido para um visual mais sutil */
+  color: #666; /* Cor mais suave para o span */
+  display: block; /* Garante que o span fique em uma nova linha */
+  margin-top: 5px; /* Margem superior para separar do parágrafo */
 }
-
-
-
 
 /* Barra de entrada fixa com efeito moderno */
 .form {
@@ -90,6 +104,7 @@ flex-wrap: wrap;
   font-size: 1rem;
   background: #fff;
   box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.1);
+  margin-left: 50px;
 }
 
 .input:focus {
@@ -115,24 +130,25 @@ flex-wrap: wrap;
 
 /* Nome do usuário no topo do chat */
 .userName {
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-family: "Poppins", sans-serif;
-  color: #00eaff; /* Azul neon */
+  font-size: 1.2rem; /* Aumenta um pouco o tamanho */
+  
+  font-family: "Montserrat", sans-serif; /* Fonte moderna e limpa */
+  color: #29abe2; /* Azul vibrante e moderno, similar ao neon */
   text-align: center;
-  padding: 1rem;
+  padding: 1.25rem 2rem; /* Aumenta o padding horizontal para respiro */
   text-transform: capitalize;
-  animation: neonGlow 1.5s infinite alternate; /* Efeito de brilho neon */
+  letter-spacing: 0.05em; /* Adiciona um espaçamento sutil entre letras */
+  border-radius: 8px; /* Bordas arredondadas suaves */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidade */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Transições suaves */
+  
 }
 
-/* Efeito de brilho neon */
-@keyframes neonGlow {
-  from {
-    text-shadow: 0 0 5px #00eaff, 0 0 10px #00eaff, 0 0 15px #007bff;
-  }
-  to {
-    text-shadow: 0 0 10px #007bff, 0 0 20px #00eaff, 0 0 30px #007bff;
-  }
+.userName:hover {
+  transform: translateY(
+    -3px
+  ); /* Pequeno efeito de elevação ao passar o mouse */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); /* Sombra mais intensa no hover */
 }
 
 .messages img {
@@ -151,19 +167,8 @@ flex-wrap: wrap;
   word-wrap: break-word; /* Garante que o texto não estoure a caixa */
 }
 
-.sent {
-  background-color: #DCF8C6;
-  align-self: flex-end;
-}
-
-.received {
-  background-color: #E5E5EA;
-  align-self: flex-start;
-}
-
-
 .video {
-  max-width: 100%;  /* Garante que o vídeo não ultrapasse os limites do chat */
+  max-width: 100%; /* Garante que o vídeo não ultrapasse os limites do chat */
   max-height: 300px; /* Limita a altura para evitar vídeos muito grandes */
   border-radius: 10px; /* Deixa os cantos arredondados para um design mais bonito */
   display: block;
@@ -200,7 +205,6 @@ flex-wrap: wrap;
   margin-left: 10px;
 }
 
-
 .chatBox {
   max-height: 400px; /* Altura máxima do chat */
   overflow-y: auto; /* Adiciona scroll vertical */
@@ -220,7 +224,15 @@ flex-wrap: wrap;
   border-radius: 4px;
 }
 
+/*microfone*/
+.microphoneButton {
+  font-size: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+}
 
-
-
-
+.uploadButton {
+  cursor: pointer;
+}

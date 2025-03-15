@@ -18,7 +18,8 @@ function Login() {
         email: email.current.value,
         senha: senha.current.value,
       });
-      console.log(response.data)
+     console.log(response.data)
+  
 
        // Verifica se a resposta da API contém o token
        if (response.data.token) {

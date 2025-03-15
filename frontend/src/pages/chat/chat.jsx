@@ -1,6 +1,6 @@
 import styles from "../../components/chat.module.css";
 import io from "socket.io-client";
-import { useEffect, useState,useRef} from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
 
 const socket = io("http://localhost:5000");
@@ -9,17 +9,19 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [file, setFile] = useState(null);
-
+  const [isRecording, setIsRecording] = useState(false); // Controle do estado de gravação
+  const [audioBlob, setAudioBlob] = useState(null); // Armazena o áudio gravado
+  const mediaRecorderRef = useRef(null); // Referência ao MediaRecorder
   const messagesEndRef = useRef(null); // Referência para a última mensagem
 
-// Função para rolar até a última mensagem
-const scrollToBottom = () => {
-  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-};
+  // Função para rolar até a última mensagem
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-useEffect(() => {
-  scrollToBottom(); // Rola automaticamente quando mensagens são carregadas ou enviadas
-}, [messages]);
+  useEffect(() => {
+    scrollToBottom(); // Rola automaticamente quando mensagens são carregadas ou enviadas
+  }, [messages]);
 
   // Pegando os dados do usuário da sessão
   const userString = sessionStorage.getItem("user");
@@ -44,7 +46,7 @@ useEffect(() => {
     };
   }, []);
 
-  // Função única para enviar texto ou mídia
+  // Função para enviar texto ou áudio
   const sendMessage = async (e) => {
     e.preventDefault();
 
@@ -68,8 +70,13 @@ useEffect(() => {
       } catch (error) {
         console.error("Erro ao enviar mídia:", error);
       }
+    } else if (audioBlob) {
+      // Envia o áudio gravado
+      const audioUrl = URL.createObjectURL(audioBlob);
+      socket.emit("sendMessage", { conteudo: audioUrl, userId, tipoMidia: "audio" });
+      setAudioBlob(null); // Limpa o estado do áudio
     } else if (newMessage.trim()) {
-      // Se não houver arquivo, mas houver texto, envia mensagem normal
+      // Se não houver arquivo nem áudio, mas houver texto, envia mensagem normal
       socket.emit("sendMessage", {
         conteudo: newMessage,
         userId,
@@ -77,6 +84,38 @@ useEffect(() => {
       });
       setNewMessage(""); // Limpa o campo de texto
     }
+  };
+
+  // Funções de gravação de áudio
+  const startRecording = () => {
+    setIsRecording(true);
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      let chunks = [];
+      mediaRecorder.ondataavailable = (event) => {
+        chunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/wav" });
+        setAudioBlob(blob);
+        setIsRecording(false);
+      };
+
+      mediaRecorder.start();
+
+      // Parar a gravação após 30 minutos (ou conforme desejado)
+      setTimeout(() => {
+        mediaRecorder.stop();
+      }, 100000000); // Grava por 30 minutos
+    });
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
   };
 
   return (
@@ -87,9 +126,7 @@ useEffect(() => {
         {messages.map((message, index) => (
           <li
             key={index}
-            className={
-              message.userId === userId ? styles.sent : styles.received
-            }
+            className={message.userId === userId ? styles.sent : styles.received}
           >
             <span>{message.user?.name || "Desconhecido"}</span>
 
@@ -117,7 +154,7 @@ useEffect(() => {
         <div ref={messagesEndRef} /> {/* Referência para rolar ao final */}
       </ul>
 
-      {/* Um único formulário para enviar tanto texto quanto mídia */}
+      {/* Formulário de envio de mensagens */}
       <form className={styles.form} onSubmit={sendMessage}>
         <input
           className={styles.input}
@@ -127,6 +164,15 @@ useEffect(() => {
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Digite uma mensagem..."
         />
+
+        {/* Ícone de microfone */}
+        <button
+          type="button"
+          onClick={isRecording ? stopRecording : startRecording}
+          className={styles.microphoneButton}
+        >
+          {isRecording ? "🛑 Parar" : "🎤 Gravar"}
+        </button>
 
         {/* Input de arquivo estilizado */}
         <label className={styles.uploadButton}>
