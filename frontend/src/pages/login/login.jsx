@@ -1,12 +1,13 @@
 import "../../../src/index.css";
 import api from "../../services/api";
 import { useNavigate, Link } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useRef, useState} from "react";
 
 function Login() {
   const email = useRef();
   const senha = useRef();
   const [error, setError] = useState(null); // Estado para armazenar mensagens de erro
+ 
   const navigate = useNavigate(); // Certifique-se de que navigate está declarado
 
   async function loginUser(e) {
@@ -18,13 +19,23 @@ function Login() {
         email: email.current.value,
         senha: senha.current.value,
       });
-     console.log(response.data)
+     
+      
   
 
        // Verifica se a resposta da API contém o token
-       if (response.data.token) {
+       if (response.data.data.token) {
+
+        const userData = {
+          token: response.data.data.token,
+          id: response.data.data.id,
+          name: response.data.data.name,
+          email: response.data.data.email,
+        };
+
+        console.log(userData)
         // Armazena o token e outras informações do usuário
-        sessionStorage.setItem("user", JSON.stringify(response.data));
+        sessionStorage.setItem("user", JSON.stringify(userData));
         // Redireciona para a página do chat
         navigate("/chat");
       } else {
@@ -36,20 +47,21 @@ function Login() {
           setError("Email ou senha incorretos. Tente novamente.");
         } else if (error.response.status === 404) {
           setError("Usuário não encontrado. Verifique o email digitado.");
-        } else {
-          setError("Erro no servidor. Tente novamente mais tarde.");
-        }
-      } else {
-        setError("Erro de conexão. Verifique sua internet.");
-      }
+        } 
+      } 
 
       
     }
   }
 
+
+ 
+
+
   return (
     <div>
-      {error && <p className="errorMessage">{error}</p>} {/* Exibe a mensagem de erro */}
+      {error && <div className="errorBox">{error}</div>} {/* Exibe a mensagem de erro */}
+      
       <form className="form" method="post" onSubmit={loginUser}>
         <h1>Login</h1>
         <input

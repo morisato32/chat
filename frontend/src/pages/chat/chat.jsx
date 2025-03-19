@@ -2,6 +2,7 @@ import styles from "../../components/chat.module.css";
 import io from "socket.io-client";
 import { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
+import { MdFileUpload, MdArrowRight, MdMic, MdStop } from "react-icons/md";
 
 const socket = io("http://localhost:5000");
 
@@ -9,36 +10,17 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [file, setFile] = useState(null);
-  const [isRecording, setIsRecording] = useState(false); // Controle do estado de gravação
-  const [audioBlob, setAudioBlob] = useState(null); // Armazena o áudio gravado
-  const mediaRecorderRef = useRef(null); // Referência ao MediaRecorder
-  const messagesEndRef = useRef(null); // Referência para a última mensagem
-
-  // Função para rolar até a última mensagem
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom(); // Rola automaticamente quando mensagens são carregadas ou enviadas
-  }, [messages]);
-
-  // Pegando os dados do usuário da sessão
-  const userString = sessionStorage.getItem("user");
-  const user = userString ? JSON.parse(userString) : null;
-  const userId = user ? user.id : null;
-  const userName = user ? user.name : "Usuário Desconhecido";
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     socket.emit("requestMessages");
 
-    socket.on("loadMessages", (loadedMessages) => {
-      setMessages(loadedMessages);
-    });
-
-    socket.on("receiveMessage", (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
+    socket.on("loadMessages", setMessages);
+    socket.on("receiveMessage", (message) =>
+      setMessages((prevMessages) => [...prevMessages, message])
+    );
 
     return () => {
       socket.off("loadMessages");
@@ -46,77 +28,79 @@ function Chat() {
     };
   }, []);
 
-  // Função para enviar texto ou áudio
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+  const userId = user.id || null;
+  const userName = user.name || "Usuário Desconhecido";
+
   const sendMessage = async (e) => {
     e.preventDefault();
 
     if (file) {
-      // Se houver um arquivo, faz o upload
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("userId", userId);
+      await uploadFile(file, file.name, getFileType(file.type));
+      setFile(null);
+      return;
+    }
 
-      try {
-        const response = await api.post(
-          "http://localhost:5000/upload",
-          formData
-        );
-        const { midiaUrl, tipoMidia } = response.data;
-
-        // Envia a mídia pelo Socket.IO
-        socket.emit("sendMessage", { conteudo: midiaUrl, userId, tipoMidia });
-
-        setFile(null); // Limpa o estado do arquivo
-      } catch (error) {
-        console.error("Erro ao enviar mídia:", error);
-      }
-    } else if (audioBlob) {
-      // Envia o áudio gravado
-      const audioUrl = URL.createObjectURL(audioBlob);
-      socket.emit("sendMessage", { conteudo: audioUrl, userId, tipoMidia: "audio" });
-      setAudioBlob(null); // Limpa o estado do áudio
-    } else if (newMessage.trim()) {
-      // Se não houver arquivo nem áudio, mas houver texto, envia mensagem normal
-      socket.emit("sendMessage", {
-        conteudo: newMessage,
-        userId,
-        tipoMidia: "texto",
-      });
-      setNewMessage(""); // Limpa o campo de texto
+    if (newMessage.trim()) {
+      socket.emit("sendMessage", { conteudo: newMessage, userId, tipoMidia: "texto" });
+      setNewMessage("");
     }
   };
 
-  // Funções de gravação de áudio
-  const startRecording = () => {
-    setIsRecording(true);
+  const uploadFile = async (file, fileName, tipoMidia) => {
+    const formData = new FormData();
+    formData.append("file", file, fileName);
+    formData.append("userId", userId);
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-
-      let chunks = [];
-      mediaRecorder.ondataavailable = (event) => {
-        chunks.push(event.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "audio/wav" });
-        setAudioBlob(blob);
-        setIsRecording(false);
-      };
-
-      mediaRecorder.start();
-
-      // Parar a gravação após 30 minutos (ou conforme desejado)
-      setTimeout(() => {
-        mediaRecorder.stop();
-      }, 100000000); // Grava por 30 minutos
-    });
+    try {
+      const response = await api.post("http://localhost:5000/upload", formData);
+      socket.emit("sendMessage", { conteudo: response.data.midiaUrl, userId, tipoMidia });
+    } catch (error) {
+      console.error("Erro ao enviar arquivo:", error);
+    }
   };
+
+  const getFileType = (mimeType) => {
+    if (mimeType.startsWith("image/")) return "imagem";
+    if (mimeType.startsWith("audio/")) return "audio";
+    if (mimeType.startsWith("video/")) return "video";
+    return "arquivo";
+  };
+
+  const startRecording = async () => {
+    if (isRecording) return; // Impede iniciar uma nova gravação se já estiver gravando
+  
+    setIsRecording(true);
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+  
+    mediaRecorderRef.current = mediaRecorder;
+    let chunks = [];
+  
+    mediaRecorder.ondataavailable = (event) => {
+      chunks.push(event.data);
+    };
+  
+    mediaRecorder.onstop = async () => {
+      setIsRecording(false);
+      const audioBlob = new Blob(chunks, { type: "audio/webm" });
+      await uploadFile(audioBlob, "audio.webm", "audio"); // Envia o arquivo de áudio após a gravação
+    };
+  
+    mediaRecorder.start();
+  };
+  
 
   const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop(); // Chama o stop apenas se a gravação estiver ativa
+    }
   };
+  
 
   return (
     <div className={styles.container}>
@@ -129,16 +113,11 @@ function Chat() {
             className={message.userId === userId ? styles.sent : styles.received}
           >
             <span>{message.user?.name || "Desconhecido"}</span>
-
             {message.tipoMidia === "imagem" ? (
-              <img
-                src={message.conteudo}
-                alt="Imagem enviada"
-                className={styles.media}
-              />
+              <img src={message.conteudo} alt="Imagem enviada" className={styles.media} />
             ) : message.tipoMidia === "audio" ? (
               <audio controls>
-                <source src={message.conteudo} type="audio/mp3" />
+                <source src={message.conteudo} type="audio/webm" />
                 Seu navegador não suporta áudio.
               </audio>
             ) : message.tipoMidia === "video" ? (
@@ -151,10 +130,9 @@ function Chat() {
             )}
           </li>
         ))}
-        <div ref={messagesEndRef} /> {/* Referência para rolar ao final */}
+        <div ref={messagesEndRef} />
       </ul>
 
-      {/* Formulário de envio de mensagens */}
       <form className={styles.form} onSubmit={sendMessage}>
         <input
           className={styles.input}
@@ -165,25 +143,24 @@ function Chat() {
           placeholder="Digite uma mensagem..."
         />
 
-        {/* Ícone de microfone */}
         <button
           type="button"
           onClick={isRecording ? stopRecording : startRecording}
           className={styles.microphoneButton}
         >
-          {isRecording ? "🛑 Parar" : "🎤 Gravar"}
+          {isRecording ? <MdStop color="red"/> : <MdMic />}
         </button>
 
-        {/* Input de arquivo estilizado */}
         <label className={styles.uploadButton}>
-          📎 Escolher Arquivo
+          <MdFileUpload />
           <input type="file" onChange={(e) => setFile(e.target.files[0])} />
         </label>
 
-        {/* Exibir nome do arquivo selecionado */}
         {file && <span className={styles.fileName}>{file.name}</span>}
 
-        <button type="submit">Enviar</button>
+        <button type="submit">
+          <MdArrowRight />
+        </button>
       </form>
     </div>
   );

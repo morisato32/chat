@@ -56,12 +56,6 @@ p{
   margin-top: 20px; /* Espaçamento superior */
   font-size: 28px;
 }
-
-.errorMessage{
-  color: #FF0000; /* Cor vermelha para a mensagem de erro */
-  font-size: 15px;
-}
-
 .cadastroLogar{
   font-size: 13px;
   text-decoration: none;
@@ -70,11 +64,6 @@ p{
 .cadastroLogar a{
   margin-left: 10px;
 }
-
-
-
-
-
 #login-form label {
   display: block; /* Labels em blocos para melhor organização */
   margin-bottom: 5px;
@@ -90,23 +79,6 @@ input {
   box-sizing: border-box; /* Garante que o padding não aumente a largura total */
   outline: none;
 }
-
-button {
-  background-color: #646cff; /* Cor de fundo do botão */
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease; /* Transição suave na cor de fundo */
-
-}
-
-button:hover {
-  background-color: #5057e6; /* Cor de fundo do botão ao passar o mouse */
-
-}
-
 /* pagina de chat */
 
 /* Nome do usuário no topo do chat */
@@ -118,5 +90,14 @@ button:hover {
   padding: 1rem;
   text-transform: uppercase;
   animation: glow 1.5s infinite alternate; /* Efeito de brilho */
+}
+
+.errorBox {
+  background-color: #ffcccc;
+  color: #a94442;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  margin-bottom: 10px;
 }
 

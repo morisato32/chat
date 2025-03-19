@@ -53,16 +53,16 @@ function Cadastro() {
       {/* Exibe a mensagem de erro */}
       <form className="form" onSubmit={createUsers}>
         <h1>Cadastrar</h1>
-        <input placeholder="nome" name="name" type="text" required ref={name} />
+        <input placeholder="Nome" name="name" type="text" required ref={name} />
         <input
-          placeholder="email"
+          placeholder="Email"
           name="email"
           type="email"
           required
           ref={email}
         />
         <input
-          placeholder="senha"
+          placeholder="Senha"
           name="senha"
           type="password"
           required
