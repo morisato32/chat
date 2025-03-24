@@ -1,245 +1,265 @@
-/* Estilizando o fundo da tela de chat */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+:root {
+    --neon-blue: #00ffff;
+    --neon-pink: #ff00ff;
+    --background-dark: rgba(5, 5, 20, 0.9);
+    --glass: rgba(255, 255, 255, 0.1);
+    --border-glow: rgba(0, 255, 255, 0.5);
+}
+
+body {
+    background: radial-gradient(circle, var(--background-dark) 10%, rgba(2, 2, 30, 1) 100%);
+    color: var(--neon-blue);
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
 .container {
-  background: linear-gradient(to bottom, #e6e6ea, #d1d1db); /* Degradê suave */
-  min-height: 100vh; /* Garante que cubra toda a tela */
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Mantém o input sempre no final */
-
+    width: 450px;
+    height: 600px;
+    backdrop-filter: blur(12px);
+    background: var(--glass);
+    border: 1px solid var(--border-glow);
+    box-shadow: 0 0 15px var(--border-glow);
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
-/* Lista de mensagens */
-.messages {
-  list-style-type: none;
-  margin: 0;
-  padding: 1rem;
-  overflow-y: auto; /* Permite rolagem */
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.messages > li.sent {
-  background: linear-gradient(135deg, #bbdefb, #90caf9); /* Gradiente suave de azul */
-  color: #1976d2; /* Azul escuro para o texto */
-  align-self: flex-end; /* Alinha à direita */
-  text-align: right;
-  justify-content: flex-end;
-  max-width: 70%; /* Ajustado para melhor legibilidade */
-  margin-bottom: 10px; /* Adicionado margem inferior para separar as mensagens */
-  border-radius: 18px; /* Bordas arredondadas para um visual mais suave */
-  padding: 12px 18px; /* Padding interno para melhor espaçamento */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidade */
-  word-wrap: break-word; /* Quebra palavras longas */
-  display: inline-block;
-  margin-right: 50px; /* diminuindo o espaçamento da margem direita */
-}
-
-.messages > li.sent > p {
-  font-size: 16px; /* Aumentado para melhor legibilidade */
-  line-height: 1.5; /* Espaçamento entre linhas para conforto visual */
-  margin-bottom: 5px; /* Margem inferior para separar parágrafos */
-}
-
-.messages > li.sent > span {
-  font-size: 12px; /* Reduzido para um visual mais sutil */
-  color: #666; /* Cor mais suave para o span */
-  display: block; /* Garante que o span fique em uma nova linha */
-  margin-top: 5px; /* Margem superior para separar do parágrafo */
-}
-
-/* Mensagens recebidas */
-.messages > li.received {
-  background: linear-gradient(135deg, #e8f5e9, #c8e6c9); /* Gradiente suave de verde claro */
-  color: #2e7d32; /* Verde escuro para o texto */
-  align-self: flex-start;
-  text-align: left;
-  justify-content: flex-start;
-  max-width: 70%; /* Ajustado para melhor legibilidade */
-  margin-bottom: 10px; /* Adicionado margem inferior para separar as mensagens */
-  border-radius: 18px; /* Bordas arredondadas para um visual mais suave */
-  padding: 12px 18px; /* Padding interno para melhor espaçamento */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidade */
-  word-wrap: break-word; /* Quebra palavras longas */
-  display: inline-block; /* adapta o tamanho ao conteudo*/
-  margin-left: 50px;/* diminuindo o espaçamento da margem esquerda*/
-}
-
-.messages > li > p {
-  font-size: 16px; /* Aumentado para melhor legibilidade */
-  line-height: 1.5; /* Espaçamento entre linhas para conforto visual */
-  margin-bottom: 5px; /* Margem inferior para separar parágrafos */
-}
-
-.messages > li > span {
-  font-size: 12px; /* Reduzido para um visual mais sutil */
-  color: #666; /* Cor mais suave para o span */
-  display: block; /* Garante que o span fique em uma nova linha */
-  margin-top: 5px; /* Margem superior para separar do parágrafo */
-}
-
-/* Barra de entrada fixa com efeito moderno */
-.form {
-  background: rgba(255, 255, 255, 0.8);
-  padding: 0.5rem;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+/* Título do usuário */
+.userName {
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-pink);
+  color: var(--neon-blue);
   display: flex;
   align-items: center;
-  box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px);
+  justify-content: space-between;
+  padding-right: 20px; /* Adiciona um pouco de espaço à direita */
 }
 
-/* Campo de entrada */
+/* Mensagens */
+.messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.messages::-webkit-scrollbar {
+    display: none;
+}
+
+.sent, .received {
+    padding: 10px 15px;
+    margin: 8px 0;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.sent {
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.6), rgba(0, 140, 255, 0.8));
+    align-self: flex-end;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.received {
+    background: linear-gradient(135deg, rgba(255, 0, 255, 0.6), rgba(200, 0, 255, 0.8));
+    align-self: flex-start;
+    box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+}
+
+/* Campo de entrada de mensagem */
+.form {
+    display: flex;
+    padding: 10px;
+    background: rgba(0, 255, 255, 0.1);
+    border-top: 1px solid var(--border-glow);
+}
+
 .input {
-  border: none;
-  padding: 0.75rem;
-  flex-grow: 1;
-  border-radius: 25px;
-  margin: 0.25rem;
-  font-size: 1rem;
-  background: #fff;
-  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.1);
-  margin-left: 50px;
+    flex: 1;
+    padding: 10px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--neon-blue);
+    box-shadow: 0 0 5px var(--border-glow);
 }
 
-.input:focus {
-  outline: none;
+/* Botões */
+button {
+    padding: 10px 15px;
+    margin-left: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    background: rgba(0, 255, 255, 0.6);
+    color: #000;
+    font-weight: bold;
+    transition: 0.3s;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
-/* Botão de envio */
-.form > button {
- border: none;
-  padding: 0.75rem 1.5rem;
-  margin: 0.25rem;
-  border-radius: 25px;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-  color:#333
+button:hover {
+    background: rgba(0, 255, 255, 0.9);
 }
 
-.form > button:hover {
-  background: #CCC;
-  color: #fff;
+/* Ícone de microfone e upload */
+.microphoneButton, .uploadButton {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-/* Nome do usuário no topo do chat */
-.userName {
-  font-size: 1.2rem; /* Aumenta um pouco o tamanho */
-  
-  font-family: "Montserrat", sans-serif; /* Fonte moderna e limpa */
-  color: #29abe2; /* Azul vibrante e moderno, similar ao neon */
-  text-align: center;
-  padding: 1.25rem 2rem; /* Aumenta o padding horizontal para respiro */
-  text-transform: capitalize;
-  letter-spacing: 0.05em; /* Adiciona um espaçamento sutil entre letras */
-  border-radius: 8px; /* Bordas arredondadas suaves */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra suave para profundidade */
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Transições suaves */
-  
+.microphoneButton svg, .uploadButton svg {
+    color: var(--neon-blue);
+    font-size: 24px;
 }
 
-.userName:hover {
-  transform: translateY(
-    -3px
-  ); /* Pequeno efeito de elevação ao passar o mouse */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); /* Sombra mais intensa no hover */
+.microphoneButton:hover svg, .uploadButton:hover svg {
+    color: var(--neon-pink);
+    transform: scale(1.1);
 }
 
-.messages img {
-  max-width: 100%; /* Para garantir que a imagem se ajuste ao contêiner */
-  max-height: 250px; /* Limite de altura para evitar imagens muito grandes */
-  border-radius: 10px; /* Bordas arredondadas para um design mais bonito */
-  display: block;
-  margin-top: 5px;
+/* Nome do arquivo anexado */
+.fileName {
+    color: var(--neon-blue);
+    font-size: 12px;
+    margin-left: 5px;
 }
 
-.messages li {
-  list-style: none;
-  margin-bottom: 10px;
-  padding: 8px;
-  border-radius: 8px;
-  word-wrap: break-word; /* Garante que o texto não estoure a caixa */
+/* Menu de opções */
+.moreOptionsContainer {
+    display: inline-block;
+    position: relative;
+}
+
+.moreOptions {
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--neon-blue);
+    transition: 0.3s;
+}
+
+.moreOptions:hover {
+    color: var(--neon-pink);
+    transform: scale(1.1);
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0 0 10px var(--border-glow);
+}
+
+.dropdownMenu button {
+    display: block;
+    background: transparent;
+    border: none;
+    color: var(--neon-blue);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.dropdownMenu button:hover {
+    background: var(--neon-blue);
+    color: black;
+    border-radius: 3px;
+}
+
+/* Edição de mensagem */
+.editContainer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.editContainer input {
+    flex: 1;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid var(--border-glow);
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--neon-blue);
+}
+
+.editContainer button {
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+/* Estilização de mídias */
+.media {
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--border-glow);
 }
 
 .video {
-  max-width: 100%; /* Garante que o vídeo não ultrapasse os limites do chat */
-  max-height: 300px; /* Limita a altura para evitar vídeos muito grandes */
-  border-radius: 10px; /* Deixa os cantos arredondados para um design mais bonito */
-  display: block;
-  margin-top: 5px;
-  outline: none; /* Remove bordas ao focar no vídeo */
-  background: black; /* Define um fundo preto para melhor contraste */
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--border-glow);
 }
 
+/* Animação de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* Botão de upload e campo de arquivo */
 .uploadButton {
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
+  position: relative;
   display: inline-block;
+  background: transparent;
+  cursor: pointer;
   transition: 0.3s;
-  margin-right: 10px;
+}
+
+.uploadButton input[type="file"] {
+  display: none; /* Oculta o input de arquivo */
 }
 
 .uploadButton:hover {
-  background-color: #CCC;
-  color: #fff;
-  
+  color: var(--neon-pink);
+  transform: scale(1.1);
 }
 
 
-/* Oculta o input real */
-.uploadButton input {
-  display: none;
-}
-
-/* Nome do arquivo selecionado */
-.fileName {
-  font-size: 14px;
-  color: #333;
-  margin-left: 10px;
-}
-
-.chatBox {
-  max-height: 400px; /* Altura máxima do chat */
-  overflow-y: auto; /* Adiciona scroll vertical */
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-}
-
-/* Oculta a barra de rolagem no Chrome */
-.chatBox::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chatBox::-webkit-scrollbar-thumb {
-  background-color: #bbb;
-  border-radius: 4px;
-}
-
-/*microfone*/
-.microphoneButton {
-  font-size: 20px;
-  background: none;
-  border: none;
+.videoCallIcon {
+  font-size: 30px;
+  color: var(--neon-pink);
   cursor: pointer;
-  margin-left: 10px;
+  transition: transform 0.3s ease, color 0.3s ease;
 }
 
-.uploadButton {
-  cursor: pointer;
-  border-radius: 50%;
-  
+.videoCallIcon:hover {
+  color: var(--neon-blue);
+  transform: scale(1.1);
 }
-
 
 

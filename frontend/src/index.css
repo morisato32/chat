@@ -1,103 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+:root {
+    --neon-blue: #00ffff;
+    --neon-pink: #ff00ff;
+    --background-dark: rgba(5, 5, 20, 0.9);
+    --glass: rgba(255, 255, 255, 0.1);
+    --border-glow: rgba(0, 255, 255, 0.5);
+}
+
 body {
-  background: radial-gradient(circle, #e91e63, #9c27b0, #673ab7, #3f51b5, #2196f3, #00bcd4, #009688, #4caf50, #8bc34a, #cddc39, #ffeb3b, #ffc107, #ff9800, #ff5722);
-  background-size: 400% 400%;
-  animation: cores 15s ease infinite;
-  margin: 0; /* Remove margens padrão do body */
-  display: flex;
-  justify-content: center; /* Centraliza o conteúdo horizontalmente */
-  align-items: center; /* Centraliza o conteúdo verticalmente */
-  min-height: 100vh; /* Garante que o fundo cubra toda a tela */
-  font-family: sans-serif; /* Define uma fonte padrão */
+    background: radial-gradient(circle, var(--background-dark) 10%, rgba(2, 2, 30, 1) 100%);
+    color: var(--neon-blue);
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    
 }
 
-@keyframes cores {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 20px;
+    background: var(--glass);
+    border: 1px solid var(--border-glow);
+    border-radius: 15px;
+    box-shadow: 0 0 15px var(--border-glow);
+    flex-direction: column;
+    text-align: center;
 }
 
-.form {
-  background-color: rgba(255, 255, 255, 0.8); /* Fundo branco semi-transparente para o formulário */
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Sombra suave */
-  width: 350px; /* Largura do formulário */
+h2 {
+    font-size: 30px;
+    font-weight: bold;
+    text-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-pink);
+    margin-bottom: 20px;
+    color: var(--neon-blue);
 }
 
-h1 {
-  color: #FFFFFF; /* Cor branca para o título */
-  font-family: 'Poppins', sans-serif; /* Fonte Poppins */
-  font-weight: 700; /* Peso da fonte em negrito */
-  text-align: center; /* Alinhamento centralizado */
-  margin-top: 20px; /* Espaçamento superior */
-  font-size: 28px;
+p {
+    font-size: 18px;
+    color: var(--neon-blue);
+    margin-bottom: 30px;
+    text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-blue);
 }
 
-h2{
-  color: #FFFFFF; /* Cor branca para o título */
-  font-family: 'Poppins', sans-serif; /* Fonte Poppins */
-  font-weight: 700; /* Peso da fonte em negrito */
-  text-align: center; /* Alinhamento centralizado */
-  margin-top: 20px; /* Espaçamento superior */
-  font-size: 70px;
+button {
+    padding: 15px 30px;
+    background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue));
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
-p{
-  color: #FFFFFF; /* Cor branca para o título */
-  font-family: 'Poppins', sans-serif; /* Fonte Poppins */
-  font-weight: 700; /* Peso da fonte em negrito */
-  text-align: center; /* Alinhamento centralizado */
-  margin-top: 20px; /* Espaçamento superior */
-  font-size: 28px;
-}
-.cadastroLogar{
-  font-size: 13px;
-  text-decoration: none;
-  
-}
-.cadastroLogar a{
-  margin-left: 10px;
-}
-#login-form label {
-  display: block; /* Labels em blocos para melhor organização */
-  margin-bottom: 5px;
-  color: #333; /* Cor do texto da label */
+button:hover {
+    background: linear-gradient(45deg, var(--neon-blue), var(--neon-pink));
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
 }
 
-input {
-  width: calc(100% - 12px); /* Largura total menos o padding */
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box; /* Garante que o padding não aumente a largura total */
-  outline: none;
-}
-/* pagina de chat */
-
-/* Nome do usuário no topo do chat */
-.userName {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #ff9800; /* Laranja vibrante */
-  text-align: center;
-  padding: 1rem;
-  text-transform: uppercase;
-  animation: glow 1.5s infinite alternate; /* Efeito de brilho */
+.slider-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    margin-top: 50px;
+    animation: fadeIn 1s ease-in-out;
 }
 
-.errorBox {
-  background-color: #ffcccc;
-  color: #a94442;
-  padding: 10px;
-  border-radius: 5px;
-  text-align: center;
-  margin-bottom: 10px;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
