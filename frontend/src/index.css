@@ -1,5 +1,12 @@
+
+
+
+
+
+
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
+/* 🎨 Paleta de Cores */
 :root {
     --neon-blue: #00ffff;
     --neon-pink: #ff00ff;
@@ -8,6 +15,7 @@
     --border-glow: rgba(0, 255, 255, 0.5);
 }
 
+/* 🌌 Configuração Geral */
 body {
     background: radial-gradient(circle, var(--background-dark) 10%, rgba(2, 2, 30, 1) 100%);
     color: var(--neon-blue);
@@ -16,76 +24,181 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+
     margin: 0;
-    overflow: hidden;
-    
+    padding: 0;
+    box-sizing: border-box
 }
 
-.container {
+
+
+/* 📜 Formulário */
+.form {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    padding: 20px;
-    background: var(--glass);
-    border: 1px solid var(--border-glow);
-    border-radius: 15px;
-    box-shadow: 0 0 15px var(--border-glow);
     flex-direction: column;
-    text-align: center;
+    width: 100%;
 }
 
-h2 {
-    font-size: 30px;
-    font-weight: bold;
-    text-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-pink);
-    margin-bottom: 20px;
-    color: var(--neon-blue);
-}
-
-p {
-    font-size: 18px;
-    color: var(--neon-blue);
-    margin-bottom: 30px;
-    text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-blue);
-}
-
-button {
-    padding: 15px 30px;
-    background: linear-gradient(45deg, var(--neon-pink), var(--neon-blue));
+/* 🔠 Inputs */
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
     border: none;
     border-radius: 8px;
-    font-size: 18px;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.2);
     color: #fff;
-    cursor: pointer;
+    outline: none;
+    transition: 0.3s ease-in-out;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+
+input:focus {
+    background: rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 15px var(--neon-blue);
+    transform: scale(1.02);
+}
+
+input::placeholder{
+    color:#fff
+}
+
+/* 🔗 Link para Login */
+.cadastroLogar {
+    font-size: 14px;
+    margin-top: 10px;
+    color: var(--neon-blue);
+}
+
+.cadastroLogar a {
+    color: var(--neon-pink);
+    text-decoration: none;
     transition: 0.3s;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.cadastroLogar a:hover {
+    text-shadow: 0 0 10px var(--neon-pink);
+}
+
+/* 🟦 Container Principal */
+.form {
+    width: 400px;
+    padding: 30px;
+    backdrop-filter: blur(12px);
+    background: var(--glass);
+    border: 2px solid var(--border-glow);
+    box-shadow: 0 0 15px var(--border-glow);
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+/* 🔘 Botão de Login */
+button {
+    width: 100%;
+    padding: 30px;
+    margin-top: 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+    color: #000;
+    font-weight: bold;
+    font-size: 16px;
+    transition: 0.3s;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
 }
 
 button:hover {
-    background: linear-gradient(45deg, var(--neon-blue), var(--neon-pink));
-    transform: scale(1.1);
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
+    transform: scale(1.05);
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-blue));
 }
 
-.slider-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    text-align: center;
-    margin-top: 50px;
-    animation: fadeIn 1s ease-in-out;
+/* ❌ Mensagem de Erro */
+.errorMessage{
+    border-left: 4px solid red;
+    color: rgb(8, 35, 94);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 14px;
 }
 
+/* 🔗 Link para Cadastro */
+.cadastroLogar {
+    font-size: 14px;
+    margin-top: 10px;
+    color: var(--neon-blue);
+}
+
+.cadastroLogar a {
+    color: var(--neon-pink);
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.cadastroLogar a:hover {
+    text-shadow: 0 0 10px var(--neon-pink);
+}
+
+/* ✨ Animação de Entrada */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(-10px);
     }
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
+
+.content {
+  text-align: center;
+  color: #0ff; /* Cor neon azul */
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 8px #0ff, 0 0 20px #00f, 0 0 40px #00f;
+  animation: fadeIn 1s ease-in-out;
+}
+
+h2 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  transition: opacity 0.5s ease-in-out;
+}
+
+
+p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+/* Efeito de fade para a troca de frases */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  h2 {
+    font-size: 2rem;
+  }
+  p {
+    font-size: 1rem;
+  }
+}
+
+/* página de erro 404 */
+
 

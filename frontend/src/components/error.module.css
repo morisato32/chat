@@ -1,0 +1,45 @@
+body {
+    background: #0d0d0d;
+    color: #00ffff;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+.container {
+    position: relative;
+}
+.glitch {
+    font-size: 5rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    position: relative;
+    animation: glitch 1s infinite linear;
+}
+@keyframes glitch {
+    0% { text-shadow: 2px 2px 0px #ff00ff, -2px -2px 0px #00ffff; }
+    50% { text-shadow: -2px -2px 0px #ff00ff, 2px 2px 0px #00ffff; }
+    100% { text-shadow: 2px 2px 0px #ff00ff, -2px -2px 0px #00ffff; }
+}
+.message {
+    font-size: 1.2rem;
+    margin-top: 10px;
+    opacity: 0.8;
+}
+.btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    border: 2px solid #00ffff;
+    color: #00ffff;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: 0.3s;
+}
+.btn:hover {
+    background: #00ffff;
+    color: #0d0d0d;
+}

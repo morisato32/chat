@@ -1,6 +1,6 @@
 import styles from "../../components/chat.module.css";
 import io from "socket.io-client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef} from "react";
 import api from "../../services/api";
 import {
   MdFileUpload,
@@ -9,7 +9,9 @@ import {
   MdStop,
   MdMoreVert,
   MdVideoCall
-} from "react-icons/md";
+} from "react-icons/md"
+
+import {useNavigate} from 'react-router-dom'
 
 const socket = io("http://localhost:5000");
 
@@ -22,6 +24,7 @@ function Chat() {
   const messagesEndRef = useRef(null);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editedText, setEditedText] = useState(""); // Ao definir o estado, garanta que ele comece com "" para evitar valores undefined:
+  const navigate = useNavigate()
 
   useEffect(() => {
     socket.emit("requestMessages");
@@ -45,6 +48,11 @@ function Chat() {
 
   const userId = user.id || null;
   const userName = user.name || "Usuário Desconhecido";
+
+  if(!user.token || !user){
+    navigate('/')
+  }
+
 
   const sendMessage = async (e) => {
     e.preventDefault();

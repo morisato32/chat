@@ -33,7 +33,7 @@ function Login() {
           email: response.data.data.email,
         };
 
-        console.log(userData)
+        
         // Armazena o token e outras informações do usuário
         sessionStorage.setItem("user", JSON.stringify(userData));
         // Redireciona para a página do chat
@@ -59,8 +59,8 @@ function Login() {
 
 
   return (
-    <div>
-      {error && <div className="errorBox">{error}</div>} {/* Exibe a mensagem de erro */}
+    <div className="container">
+      {error && <div className="errorMessage">{error}</div>} {/* Exibe a mensagem de erro */}
       
       <form className="form" method="post" onSubmit={loginUser}>
         <h1>Login</h1>

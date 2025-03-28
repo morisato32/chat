@@ -1,265 +1,269 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
-:root {
-    --neon-blue: #00ffff;
-    --neon-pink: #ff00ff;
-    --background-dark: rgba(5, 5, 20, 0.9);
-    --glass: rgba(255, 255, 255, 0.1);
-    --border-glow: rgba(0, 255, 255, 0.5);
-}
 
-body {
-    background: radial-gradient(circle, var(--background-dark) 10%, rgba(2, 2, 30, 1) 100%);
-    color: var(--neon-blue);
-    font-family: 'Orbitron', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
 
+/* Estilização geral */
 .container {
-    width: 450px;
-    height: 600px;
-    backdrop-filter: blur(12px);
-    background: var(--glass);
-    border: 1px solid var(--border-glow);
-    box-shadow: 0 0 15px var(--border-glow);
-    border-radius: 15px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    position: relative;
-}
-
-/* Título do usuário */
-.userName {
-  font-size: 24px;
-  font-weight: bold;
-  text-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-pink);
-  color: var(--neon-blue);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-right: 20px; /* Adiciona um pouco de espaço à direita */
-}
-
-/* Mensagens */
-.messages {
-    flex: 1;
+    height: 100vh;
+    background: #ffffff10;
+    backdrop-filter:blur(10px);
+    border: 2px solid #ffffff30;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+  }
+  
+  .userName {
+    background: #1a1a1a;
+    color: #0ff;
     padding: 15px;
-    overflow-y: auto;
-    scrollbar-width: none;
-}
-
-.messages::-webkit-scrollbar {
-    display: none;
-}
-
-.sent, .received {
-    padding: 10px 15px;
-    margin: 8px 0;
-    border-radius: 12px;
-    max-width: 80%;
-    word-wrap: break-word;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-.sent {
-    background: linear-gradient(135deg, rgba(0, 255, 255, 0.6), rgba(0, 140, 255, 0.8));
-    align-self: flex-end;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-}
-
-.received {
-    background: linear-gradient(135deg, rgba(255, 0, 255, 0.6), rgba(200, 0, 255, 0.8));
-    align-self: flex-start;
-    box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
-}
-
-/* Campo de entrada de mensagem */
-.form {
-    display: flex;
-    padding: 10px;
-    background: rgba(0, 255, 255, 0.1);
-    border-top: 1px solid var(--border-glow);
-}
-
-.input {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    outline: none;
-    font-size: 16px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--neon-blue);
-    box-shadow: 0 0 5px var(--border-glow);
-}
-
-/* Botões */
-button {
-    padding: 10px 15px;
-    margin-left: 10px;
-    border: none;
-    cursor: pointer;
-    border-radius: 8px;
-    background: rgba(0, 255, 255, 0.6);
-    color: #000;
+    text-align: center;
+    font-size: 1.2rem;
     font-weight: bold;
-    transition: 0.3s;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-}
-
-button:hover {
-    background: rgba(0, 255, 255, 0.9);
-}
-
-/* Ícone de microfone e upload */
-.microphoneButton, .uploadButton {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.microphoneButton svg, .uploadButton svg {
-    color: var(--neon-blue);
-    font-size: 24px;
-}
-
-.microphoneButton:hover svg, .uploadButton:hover svg {
-    color: var(--neon-pink);
-    transform: scale(1.1);
-}
-
-/* Nome do arquivo anexado */
-.fileName {
-    color: var(--neon-blue);
-    font-size: 12px;
-    margin-left: 5px;
-}
-
-/* Menu de opções */
-.moreOptionsContainer {
-    display: inline-block;
-    position: relative;
-}
-
-.moreOptions {
-    cursor: pointer;
-    font-size: 20px;
-    color: var(--neon-blue);
-    transition: 0.3s;
-}
-
-.moreOptions:hover {
-    color: var(--neon-pink);
-    transform: scale(1.1);
-}
-
-.dropdownMenu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 5px;
-    padding: 5px;
-    box-shadow: 0 0 10px var(--border-glow);
-}
-
-.dropdownMenu button {
-    display: block;
-    background: transparent;
-    border: none;
-    color: var(--neon-blue);
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.dropdownMenu button:hover {
-    background: var(--neon-blue);
-    color: black;
-    border-radius: 3px;
-}
-
-/* Edição de mensagem */
-.editContainer {
+    border-bottom: 2px solid #0ff;
+  }
+  
+  /* Estilização das mensagens */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sent {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #0ff, #00f);
+    color: #000;
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 60%;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 10px #0ff;
+    list-style: none;
+  }
+  
+  .received {
+    align-self: flex-start;
+    background: #222;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 60%;
+    margin-bottom: 10px;
+    box-shadow: 0px 0px 10px #444;
+     list-style: none;
+  }
+  
+  /* Ícones menores para evitar que ocultem o input */
+  .microphoneButton svg,
+  .uploadButton svg,
+  .form button svg {
+    font-size: 18px; /* Reduz o tamanho dos ícones */
+  }
+  
+  /* Ajuste no container do input para garantir que ele apareça */
+  .form {
     display: flex;
     align-items: center;
-    gap: 5px;
-}
-
-.editContainer input {
-    flex: 1;
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid var(--border-glow);
-    background: rgba(0, 255, 255, 0.1);
-    color: var(--neon-blue);
-}
-
-.editContainer button {
-    padding: 5px 10px;
-    font-size: 14px;
-}
-
-/* Estilização de mídias */
-.media {
+    padding: 10px;
+   
+    border-top: 2px solid #0ff;
+    gap: 10px;
+    position: relative;
+  }
+  
+ /* Efeito neon no ícone da câmera */
+  .videoCallIcon {
+    font-size: 28px;
+    color: #0ff;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+  }
+  
+  .videoCallIcon:hover {
+    text-shadow: 0px 0px 15px rgba(0, 255, 255, 1);
+    transform: scale(1.1);
+  }
+  
+  button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.5rem;
+    margin-left: 10px;
+    color: #0ff;
+    transition: transform 0.2s ease;
+  width: 300px;;
+  }
+  
+  button:hover {
+    transform: scale(1.2);
+    color: #00f;
+  }
+  
+  /* Ícones */
+  .microphoneButton {
+    color: #0ff;
+  }
+  
+  .uploadButton {
+    cursor: pointer;
+  }
+  
+  .uploadButton input {
+    display: none;
+  }
+  
+  /* Imagens e vídeos */
+  .media {
     max-width: 100%;
     border-radius: 10px;
-    box-shadow: 0 0 10px var(--border-glow);
-}
-
-.video {
-    width: 100%;
+    box-shadow: 0px 0px 10px #0ff;
+  }
+  
+  .video {
+    max-width: 100%;
     border-radius: 10px;
-    box-shadow: 0 0 10px var(--border-glow);
-}
-
-/* Animação de entrada */
-@keyframes fadeIn {
+  }
+  
+  /* Menu de opções */
+  .moreOptionsContainer {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .moreOptions {
+    cursor: pointer;
+  }
+  
+  .dropdownMenu {
+    position: absolute;
+    top: 20px;
+    right: 0;
+    background: #111;
+    border: 1px solid #0ff;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px #0ff;
+  }
+  
+  .dropdownMenu button {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    color: #0ff;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+  }
+  
+  .dropdownMenu button:hover {
+    background: #0ff;
+    color: #000;
+  }
+  
+  /* Animações */
+  @keyframes fadeIn {
     from {
-        opacity: 0;
-        transform: translateY(10px);
+      opacity: 0;
+      transform: translateY(10px);
     }
     to {
-        opacity: 1;
-        transform: translateY(0);
+      opacity: 1;
+      transform: translateY(0);
     }
-}
-
-
-/* Botão de upload e campo de arquivo */
-.uploadButton {
-  position: relative;
-  display: inline-block;
-  background: transparent;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.uploadButton input[type="file"] {
-  display: none; /* Oculta o input de arquivo */
-}
-
-.uploadButton:hover {
-  color: var(--neon-pink);
-  transform: scale(1.1);
-}
-
-
-.videoCallIcon {
-  font-size: 30px;
-  color: var(--neon-pink);
-  cursor: pointer;
-  transition: transform 0.3s ease, color 0.3s ease;
-}
-
-.videoCallIcon:hover {
-  color: var(--neon-blue);
-  transform: scale(1.1);
-}
-
-
+  }
+  
+  .sent,
+  .received {
+    animation: fadeIn 0.3s ease-in-out;
+    max-width:300px;
+  }
+  
+  /* Responsividade para dispositivos móveis */
+  @media (max-width: 768px) {
+    .container {
+      height: 100%;
+    }
+  
+    .userName {
+      font-size: 1rem;
+    }
+  
+    .messages {
+      padding: 10px;
+      
+    }
+  
+    /* Ajustando as mensagens para ficarem mais compactas em telas menores */
+    .sent,
+    .received {
+      max-width: 90%; /* Aumenta o máximo das mensagens */
+      font-size: 0.9rem;
+    }
+  
+    /* Ajustando o tamanho do input */
+    .input {
+      width: 100%;
+      font-size: 1rem;
+      padding: 10px;
+    }
+  
+    /* Menu suspenso do mais opções no mobile */
+    .dropdownMenu {
+      width: 100%;
+      left: 0;
+      border-radius: 0;
+    }
+  
+    .dropdownMenu button {
+      padding: 12px;
+    }
+  
+    /* Ajustando ícones e botões para telas pequenas */
+    .microphoneButton svg,
+    .uploadButton svg,
+    .form button svg {
+      font-size: 22px;
+    }
+  
+    .videoCallIcon {
+      font-size: 24px;
+    }
+  
+    .form {
+      gap: 5px;
+    }
+  }
+  
+  /* Responsividade para telas menores */
+  @media (max-width: 480px) {
+    /* Ajustando ainda mais a largura das mensagens e o layout dos ícones */
+    .sent,
+    .received {
+      max-width: 85%;
+    }
+  
+    .userName {
+      font-size: 0.9rem;
+      padding: 10px;
+    }
+  
+    /* Ajustando ícones e botões */
+    .microphoneButton svg,
+    .uploadButton svg {
+      font-size: 20px;
+    }
+  
+    .videoCallIcon {
+      font-size: 22px;
+    }
+  
+    /* Reduzindo o tamanho do input para melhor visualização */
+    .input {
+      padding: 8px;
+    }
+  }
+  

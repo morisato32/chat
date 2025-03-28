@@ -34,7 +34,7 @@ function Cadastro() {
        
 
         sessionStorage.setItem("user", JSON.stringify(userData)); // Salva o objeto inteiro como string JSON
-        navigate("/boasvindas");
+        navigate("/boasvindas")
       }
     } catch (error) {
       if (error.response.status === 400) {
@@ -49,7 +49,7 @@ function Cadastro() {
 
   return (
     <div className="container">
-      {error && <p className="errorMessage">{error}</p>}
+      {error && <div className="errorMessage">{error}</div>}
       {/* Exibe a mensagem de erro */}
       <form className="form" onSubmit={createUsers}>
         <h1>Cadastrar</h1>

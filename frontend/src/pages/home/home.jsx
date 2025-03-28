@@ -36,7 +36,7 @@ function Home() {
   };
 
   useEffect(() => {
-    const intervalo = setInterval(mudarFrase, 3000); // Muda a frase a cada 3 segundos
+    const intervalo = setInterval(mudarFrase, 5000); // Muda a frase a cada 5 segundos
 
     return () => clearInterval(intervalo); // Limpa o intervalo quando o componente é desmontado
   }, []);

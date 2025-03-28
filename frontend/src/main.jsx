@@ -25,9 +25,8 @@ const router = createBrowserRouter([
     path: '/',
     element:<Layout><Home/></Layout>
   },
+  
   {
-    errorElement:<ErrorPage/>,
-    
   path: '/cadastro',
   element:<Cadastro/>
 },
@@ -42,8 +41,18 @@ const router = createBrowserRouter([
 {
   path: '/chat',
   element:<Chat/>
+},
+ // Rota coringa para páginas inexistentes
+ {
+  path: '*',
+  element: <ErrorPage />,
 }
 ])
+// O caminho "*" captura qualquer URL que não corresponda a nenhuma das rotas definidas.
+
+// Assim, sempre que o usuário acessar uma página que não existe, a ErrorPage será renderizada.
+
+// Agora, se você tentar acessar uma rota inexistente, a página 404 será exibida corretamente. 🚀
 
 
 createRoot(document.getElementById("root")).render(
