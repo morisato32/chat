@@ -8,6 +8,7 @@ import BoasVindas from './pages/BoasVindas'
 import Chat from './pages/chat/chat'
 import ErrorPage from './pages/error'
 import Layout from './components/layout'
+import Convite from './pages/convidarUsuario/convite'
 
 
 
@@ -36,11 +37,15 @@ const router = createBrowserRouter([
 },
 {
   path: '/boasvindas',
-  element:<Layout><BoasVindas/></Layout>
+  element:<BoasVindas/>
 },
 {
   path: '/chat',
   element:<Chat/>
+},
+{
+  path: '/chat/:id',  // Rota para o chat com ID e Token como parâmetro 
+  element: <Chat />,  // O componente que renderiza a página do convite
 },
  // Rota coringa para páginas inexistentes
  {

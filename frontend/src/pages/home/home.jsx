@@ -43,7 +43,7 @@ function Home() {
 
   return (
     <div className="code-background">
-      <div class="code-lines"></div>
+      <div className="code-lines"></div>
       <div className="content">
         <h2>{frase.title}</h2> {/* Exibe o título */}
         <p>{frase.description}</p> {/* Exibe a descrição */}

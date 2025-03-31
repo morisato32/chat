@@ -1,6 +1,6 @@
 import styles from "../../components/chat.module.css";
 import io from "socket.io-client";
-import { useEffect, useState, useRef} from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "../../services/api";
 import {
   MdFileUpload,
@@ -8,10 +8,10 @@ import {
   MdMic,
   MdStop,
   MdMoreVert,
-  MdVideoCall
-} from "react-icons/md"
+  MdVideoCall,
+} from "react-icons/md";
 
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 
 const socket = io("http://localhost:5000");
 
@@ -24,7 +24,7 @@ function Chat() {
   const messagesEndRef = useRef(null);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editedText, setEditedText] = useState(""); // Ao definir o estado, garanta que ele comece com "" para evitar valores undefined:
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     socket.emit("requestMessages");
@@ -49,10 +49,9 @@ function Chat() {
   const userId = user.id || null;
   const userName = user.name || "Usuário Desconhecido";
 
-  if(!user.token || !user){
-    navigate('/')
+  if (!user.token || !user) {
+    navigate("/");
   }
-
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -149,9 +148,9 @@ function Chat() {
 
     try {
       const response = await api.put(`/messages/update/${messageId}`, {
-       novoConteudo: newText,  // Envia o novo texto para o backend // ✅ Agora enviamos "novoConteudo", que o backend espera
+        novoConteudo: newText, // Envia o novo texto para o backend // ✅ Agora enviamos "novoConteudo", que o backend espera
       });
-      console.log(response)
+      console.log(response);
 
       if (response.status === 200) {
         // Atualiza o estado das mensagens localmente após o sucesso
@@ -162,10 +161,7 @@ function Chat() {
         );
         setEditingMessageId(null); // Sai do modo de edição
         setEditedText(""); // Limpa o campo de edição
-      } 
-     
-      
-      else {
+      } else {
         console.error("Erro ao atualizar mensagem");
       }
     } catch (error) {
@@ -196,11 +192,16 @@ function Chat() {
 
   return (
     <div className={styles.container}>
+      
       <h2 className={styles.userName}>{userName} batendo papo...</h2>
-      <MdVideoCall
-          className={styles.videoCallIcon}
-          
-        />
+      <label className={styles.uploadButton}>
+          <MdFileUpload />
+          <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+        </label>
+
+        {file && <span className={styles.fileName}>{file.name}</span>}
+
+      <MdVideoCall className={styles.videoCallIcon} />
 
       <ul className={styles.messages}>
         {messages.map((message, index) => (
@@ -223,7 +224,6 @@ function Chat() {
                       Excluir
                     </button>
                     <button onClick={() => setEditingMessageId(message.id)}>
-                      
                       Editar
                     </button>
                   </div>
@@ -285,24 +285,21 @@ function Chat() {
           placeholder="Digite uma mensagem..."
         />
 
-        <button
-          type="button"
-          onClick={isRecording ? stopRecording : startRecording}
-          className={styles.microphoneButton}
-        >
-          {isRecording ? <MdStop color="red" /> : <MdMic />}
-        </button>
+        {!newMessage && !file ? (
+          <button
+            type="button"
+            onClick={isRecording ? stopRecording : startRecording}
+            className={styles.chat_microfone}
+          >
+            {isRecording ? <MdStop color="red" /> : <MdMic />}
+          </button>
+        ) : (
+          <button className= {styles.chat_button} type="submit">
+            <MdArrowRight />
+          </button>
+        )}
 
-        <label className={styles.uploadButton}>
-          <MdFileUpload />
-          <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        </label>
-
-        {file && <span className={styles.fileName}>{file.name}</span>}
-
-        <button type="submit">
-          <MdArrowRight />
-        </button>
+       
       </form>
     </div>
   );

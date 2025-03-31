@@ -1,269 +1,298 @@
-
-
-
 /* Estilização geral */
 .container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background: #ffffff10;
-    backdrop-filter:blur(10px);
-    border: 2px solid #ffffff30;
-    color: #ffffff;
-    font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  width: 60vw;
+  height: 100vh;
+  background: #fff;
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+}
+
+.userName {
+  background: #1a1a1a;
+  color: #0ff;
+  padding: 15px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-bottom: 2px solid #0ff;
+}
+
+/* Estilização das mensagens */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sent {
+  align-self: flex-end;
+  background: #fff;
+  color: #000;
+  padding: 10px 15px;
+  border-radius: 15px;
+  max-width: 60%;
+  margin-bottom: 10px;
+  box-shadow: 0px 0px 10px #0ff;
+}
+
+.received {
+  align-self: flex-start;
+  background: #222;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 15px;
+  max-width: 60%;
+  margin-bottom: 10px;
+  box-shadow: 0px 0px 10px #444;
+}
+
+/* Ícones menores para evitar que ocultem o input */
+.microphoneButton svg,
+.uploadButton svg,
+.form button svg {
+  font-size: 18px; /* Reduz o tamanho dos ícones */
+}
+
+/* Ajuste no container do input para garantir que ele apareça */
+.form {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: #1a1a1a;
+  border-top: 2px solid #0ff;
+  gap: 10px;
+  position: relative;
+}
+
+/* Input de mensagem corrigido */
+.input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 2px solid #0ff;
+  border-radius: 20px;
+  outline: none;
+  font-size: 1rem;
+  background: #111;
+  color: #fff;
+  box-shadow: 0px 0px 10px rgba(0, 255, 255, 0.5);
+  width: 450px;
+}
+
+/* Efeito neon no ícone da câmera */
+.videoCallIcon {
+  font-size: 28px;
+  color: #0ff;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+}
+
+.videoCallIcon:hover {
+  text-shadow: 0px 0px 15px rgba(0, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  margin-left: 10px;
+  color: #0ff;
+  transition: transform 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.2);
+  color: #00f;
+}
+
+/* Ícones */
+.microphoneButton {
+  color: #0ff;
+}
+
+.uploadButton {
+  cursor: pointer;
+  color:#111
+}
+
+.uploadButton input {
+  display: none;
+}
+
+/* Imagens e vídeos */
+.media {
+  max-width: 100%;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px #0ff;
+}
+
+.video {
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+/* Menu de opções */
+.moreOptionsContainer {
+  position: relative;
+}
+
+.moreOptions {
+  cursor: pointer;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  background: #111;
+  border: 1px solid #0ff;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px #0ff;
+}
+
+.dropdownMenu button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #0ff;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdownMenu button:hover {
+  background: #0ff;
+  color: #000;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sent,
+.received {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .container {
+    height: 100%;
+  }
+
   .userName {
-    background: #1a1a1a;
-    color: #0ff;
-    padding: 15px;
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    border-bottom: 2px solid #0ff;
+    font-size: 1rem;
   }
-  
-  /* Estilização das mensagens */
+
   .messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
+    padding: 10px;
   }
-  
-  .sent {
-    align-self: flex-end;
-    background: linear-gradient(135deg, #0ff, #00f);
-    color: #000;
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 60%;
-    margin-bottom: 10px;
-    box-shadow: 0px 0px 10px #0ff;
-    list-style: none;
-  }
-  
+
+  /* Ajustando as mensagens para ficarem mais compactas em telas menores */
+  .sent,
   .received {
-    align-self: flex-start;
-    background: #222;
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 60%;
-    margin-bottom: 10px;
-    box-shadow: 0px 0px 10px #444;
-     list-style: none;
+    max-width: 90%; /* Aumenta o máximo das mensagens */
+    font-size: 0.9rem;
   }
-  
-  /* Ícones menores para evitar que ocultem o input */
+
+  /* Ajustando o tamanho do input */
+  .input {
+    width: 100%;
+    font-size: 1rem;
+    padding: 10px;
+  }
+
+  /* Menu suspenso do mais opções no mobile */
+  .dropdownMenu {
+    width: 100%;
+    left: 0;
+    border-radius: 0;
+  }
+
+  .dropdownMenu button {
+    padding: 12px;
+  }
+
+  /* Ajustando ícones e botões para telas pequenas */
   .microphoneButton svg,
   .uploadButton svg,
   .form button svg {
-    font-size: 18px; /* Reduz o tamanho dos ícones */
+    font-size: 22px;
   }
-  
-  /* Ajuste no container do input para garantir que ele apareça */
-  .form {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-   
-    border-top: 2px solid #0ff;
-    gap: 10px;
-    position: relative;
-  }
-  
- /* Efeito neon no ícone da câmera */
+
   .videoCallIcon {
-    font-size: 28px;
-    color: #0ff;
-    cursor: pointer;
-    transition: 0.3s ease-in-out;
+    font-size: 24px;
   }
-  
-  .videoCallIcon:hover {
-    text-shadow: 0px 0px 15px rgba(0, 255, 255, 1);
-    transform: scale(1.1);
+
+  .form {
+    gap: 5px;
   }
-  
-  button {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 0.5rem;
-    margin-left: 10px;
-    color: #0ff;
-    transition: transform 0.2s ease;
-  width: 300px;;
-  }
-  
-  button:hover {
-    transform: scale(1.2);
-    color: #00f;
-  }
-  
-  /* Ícones */
-  .microphoneButton {
-    color: #0ff;
-  }
-  
-  .uploadButton {
-    cursor: pointer;
-  }
-  
-  .uploadButton input {
-    display: none;
-  }
-  
-  /* Imagens e vídeos */
-  .media {
-    max-width: 100%;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px #0ff;
-  }
-  
-  .video {
-    max-width: 100%;
-    border-radius: 10px;
-  }
-  
-  /* Menu de opções */
-  .moreOptionsContainer {
-    position: relative;
-    z-index: 1;
-  }
-  
-  .moreOptions {
-    cursor: pointer;
-  }
-  
-  .dropdownMenu {
-    position: absolute;
-    top: 20px;
-    right: 0;
-    background: #111;
-    border: 1px solid #0ff;
-    border-radius: 5px;
-    box-shadow: 0px 0px 10px #0ff;
-  }
-  
-  .dropdownMenu button {
-    display: block;
-    width: 100%;
-    background: none;
-    border: none;
-    color: #0ff;
-    padding: 10px;
-    text-align: left;
-    cursor: pointer;
-  }
-  
-  .dropdownMenu button:hover {
-    background: #0ff;
-    color: #000;
-  }
-  
-  /* Animações */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 480px) {
+  /* Ajustando ainda mais a largura das mensagens e o layout dos ícones */
   .sent,
   .received {
-    animation: fadeIn 0.3s ease-in-out;
-    max-width:300px;
+    max-width: 85%;
   }
-  
-  /* Responsividade para dispositivos móveis */
-  @media (max-width: 768px) {
-    .container {
-      height: 100%;
-    }
-  
-    .userName {
-      font-size: 1rem;
-    }
-  
-    .messages {
-      padding: 10px;
-      
-    }
-  
-    /* Ajustando as mensagens para ficarem mais compactas em telas menores */
-    .sent,
-    .received {
-      max-width: 90%; /* Aumenta o máximo das mensagens */
-      font-size: 0.9rem;
-    }
-  
-    /* Ajustando o tamanho do input */
-    .input {
-      width: 100%;
-      font-size: 1rem;
-      padding: 10px;
-    }
-  
-    /* Menu suspenso do mais opções no mobile */
-    .dropdownMenu {
-      width: 100%;
-      left: 0;
-      border-radius: 0;
-    }
-  
-    .dropdownMenu button {
-      padding: 12px;
-    }
-  
-    /* Ajustando ícones e botões para telas pequenas */
-    .microphoneButton svg,
-    .uploadButton svg,
-    .form button svg {
-      font-size: 22px;
-    }
-  
-    .videoCallIcon {
-      font-size: 24px;
-    }
-  
-    .form {
-      gap: 5px;
-    }
+
+  .userName {
+    font-size: 0.9rem;
+    padding: 10px;
   }
-  
-  /* Responsividade para telas menores */
-  @media (max-width: 480px) {
-    /* Ajustando ainda mais a largura das mensagens e o layout dos ícones */
-    .sent,
-    .received {
-      max-width: 85%;
-    }
-  
-    .userName {
-      font-size: 0.9rem;
-      padding: 10px;
-    }
-  
-    /* Ajustando ícones e botões */
-    .microphoneButton svg,
-    .uploadButton svg {
-      font-size: 20px;
-    }
-  
-    .videoCallIcon {
-      font-size: 22px;
-    }
-  
-    /* Reduzindo o tamanho do input para melhor visualização */
-    .input {
-      padding: 8px;
-    }
+
+  /* Ajustando ícones e botões */
+  .microphoneButton svg,
+  .uploadButton svg {
+    font-size: 20px;
   }
-  
+
+  .videoCallIcon {
+    font-size: 22px;
+  }
+
+  /* Reduzindo o tamanho do input para melhor visualização */
+  .input {
+    padding: 300px;
+  }
+}
+
+.chat_microfone{
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 22px; /* Ajuste do tamanho */
+  color: #0ff;
+  transition: transform 0.2s ease;
+  width: 50px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+ 
+}
+
+.chat_microfone:hover{
+  transform: scale(1.2);
+}
+
+.chat_button{
+  width: 100%;
+  max-width: 50px;
+  margin-bottom: 10px;
+ 
+}
+
