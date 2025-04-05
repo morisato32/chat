@@ -37,6 +37,7 @@
   max-width: 60%;
   margin-bottom: 10px;
   box-shadow: 0px 0px 10px #0ff;
+  list-style: none;
 }
 
 .received {
@@ -47,7 +48,7 @@
   border-radius: 15px;
   max-width: 60%;
   margin-bottom: 10px;
-  box-shadow: 0px 0px 10px #444;
+  box-shadow: 0px 0px 10px #0ff;
 }
 
 /* Ícones menores para evitar que ocultem o input */
@@ -55,6 +56,11 @@
 .uploadButton svg,
 .form button svg {
   font-size: 18px; /* Reduz o tamanho dos ícones */
+}
+
+.uploadButton svg {
+  margin-left: 52px;
+  color: #0ff;
 }
 
 /* Ajuste no container do input para garantir que ele apareça */
@@ -82,18 +88,7 @@
   width: 450px;
 }
 
-/* Efeito neon no ícone da câmera */
-.videoCallIcon {
-  font-size: 28px;
-  color: #0ff;
-  cursor: pointer;
-  transition: 0.3s ease-in-out;
-}
 
-.videoCallIcon:hover {
-  text-shadow: 0px 0px 15px rgba(0, 255, 255, 1);
-  transform: scale(1.1);
-}
 
 button {
   background: transparent;
@@ -117,7 +112,7 @@ button:hover {
 
 .uploadButton {
   cursor: pointer;
-  color:#111
+  color: #111;
 }
 
 .uploadButton input {
@@ -144,15 +139,15 @@ button:hover {
 .moreOptions {
   cursor: pointer;
 }
-
 .dropdownMenu {
   position: absolute;
   top: 20px;
   right: 0;
-  background: #111;
+  background: #11141f;
   border: 1px solid #0ff;
   border-radius: 5px;
   box-shadow: 0px 0px 10px #0ff;
+  width: 150px;
 }
 
 .dropdownMenu button {
@@ -160,10 +155,12 @@ button:hover {
   width: 100%;
   background: none;
   border: none;
-  color: #0ff;
-  padding: 10px;
-  text-align: left;
+  color: #fff;
+  padding: 15px;
   cursor: pointer;
+  font-size: 15px;
+  width: 100px;
+  margin-left: 24px;
 }
 
 .dropdownMenu button:hover {
@@ -272,7 +269,7 @@ button:hover {
   }
 }
 
-.chat_microfone{
+.chat_microfone {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -282,17 +279,14 @@ button:hover {
   width: 50px;
   border-radius: 50%;
   margin-bottom: 10px;
- 
 }
 
-.chat_microfone:hover{
+.chat_microfone:hover {
   transform: scale(1.2);
 }
 
-.chat_button{
+.chat_button {
   width: 100%;
   max-width: 50px;
   margin-bottom: 10px;
- 
 }
-

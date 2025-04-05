@@ -106,6 +106,9 @@ button:hover {
     text-shadow: 0 0 10px var(--neon-pink);
 }
 
+
+
+
 /* ❌ Mensagem de Erro */
 .errorMessage {
     border-left: 4px solid red;

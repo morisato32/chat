@@ -8,10 +8,12 @@ import {
   MdMic,
   MdStop,
   MdMoreVert,
-  MdVideoCall,
+  
 } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
+
+import VideoChat from "../../components/videoChat"
 
 const socket = io("http://localhost:5000");
 
@@ -189,6 +191,7 @@ function Chat() {
       }
     }
   };
+  
 
   return (
     <div className={styles.container}>
@@ -201,7 +204,8 @@ function Chat() {
 
         {file && <span className={styles.fileName}>{file.name}</span>}
 
-      <MdVideoCall className={styles.videoCallIcon} />
+      
+      <VideoChat/>
 
       <ul className={styles.messages}>
         {messages.map((message, index) => (
