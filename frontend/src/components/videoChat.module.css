@@ -1,0 +1,226 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Contêiner principal do chat de vídeo */
+.video_chat {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+}
+
+/* Vídeos */
+video,
+.local_video,
+.remote_video {
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  border: 2px solid rgba(0, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  object-fit: cover;
+}
+
+.local_video {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 200px;
+  height: 120px;
+  z-index: 2;
+}
+
+.remote_video {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background-color: #000;
+}
+
+/* Botão de encerrar chamada */
+.hang_up_btn {
+  margin-top: 20px;
+  padding: 12px 20px;
+  background: #ff004f;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(255, 0, 79, 0.5);
+  transition: 0.3s ease;
+}
+
+.hang_up_btn:hover {
+  background: #ff3366;
+  box-shadow: 0 0 20px rgba(255, 0, 79, 0.8);
+}
+
+/* Botão de iniciar chamada (ícone de vídeo) */
+.video_call_icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+  background: rgba(0, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  transition: 0.3s;
+}
+
+.video_call_icon:hover {
+  background: rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.7);
+}
+
+/* Tela de chamada recebida */
+.incoming_call {
+  position: absolute;
+  top: 40%;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 20px 30px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.incoming_call p {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: red;
+}
+
+.incoming_call button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background: #00ffaa;
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.incoming_call button:hover {
+  background: #00cc88;
+  box-shadow: 0 0 15px rgba(0, 255, 170, 0.6);
+}
+
+/* Botão alternativo genérico */
+.videoButton {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #0ff;
+  color: #0ff;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.videoButton:hover {
+  box-shadow: 0 0 8px #0ff, 0 0 16px #0ff;
+}
+
+/* Overlay (se usar como modal) */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(10px);
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Container dos vídeos */
+.video_call_container,
+.videoContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Vídeo alternativo */
+.video {
+  width: 320px;
+  height: 240px;
+  background: black;
+  border-radius: 8px;
+}
+
+/* Botão de fechar alternativo */
+.closeButton {
+  padding: 8px 12px;
+  background: red;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+/* Status da chamada */
+.call_status {
+  margin-top: 10px;
+  color: #0ff;
+  font-weight: bold;
+  text-shadow: 0 0 8px #0ff;
+}
+
+/* Animação de pulso */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .local_video {
+    width: 120px;
+    height: 80px;
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .remote_video {
+    max-width: 100%;
+    aspect-ratio: auto;
+    height: auto;
+  }
+
+  .incoming_call {
+    width: 90%;
+  }
+}

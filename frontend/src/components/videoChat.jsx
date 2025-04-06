@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import io from "socket.io-client";
 import { MdVideoCall } from "react-icons/md";
+import styles from '../components/videoChat.module.css'
 
 const socket = io("http://localhost:5000");
 
@@ -13,7 +14,9 @@ const VideoChat = () => {
     const [isRegistered, setIsRegistered] = useState(false);
     const [isCalling, setIsCalling] = useState(false);
     const [incomingCall, setIncomingCall] = useState(null);
-    const [targetUserId, setTargetUserId] = useState(null);
+    const targetUserIdRef = useRef(null);
+   
+    const [callStatus, setCallStatus] = useState(''); // Estado para a mensagem de status
 
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
@@ -22,7 +25,6 @@ const VideoChat = () => {
     useEffect(() => {
         if (!userId) return;
 
-        console.log("👤 Tentando registrar usuário:", userId);
         socket.emit("register", userId);
 
         socket.on("registered", (data) => {
@@ -39,29 +41,27 @@ const VideoChat = () => {
 
         socket.on("answer", async ({ answer }) => {
             console.log("✅ Resposta recebida. Estabelecendo conexão...");
-        
             if (!peerConnection.current) {
-                peerConnection.current = createPeerConnection();
+                console.error("❌ peerConnection não definida.");
+                return;
             }
-        
-            const stream = await getLocalMediaStream();
-            stream.getTracks().forEach((track) =>
-                peerConnection.current.addTrack(track, stream)
-            );
-        
-            if (localVideoRef.current) {
-                localVideoRef.current.srcObject = stream;
-            }
-        
+
             await peerConnection.current.setRemoteDescription(
                 new RTCSessionDescription(answer)
             );
-        
-            setIsCalling(true);
-        });
-        
 
-        socket.on("candidate", (data) => {
+            // ✅ Exibir vídeo local após aceitar
+            const stream = await getLocalMediaStream();
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = stream;
+            }
+
+            setIsCalling(true);
+            setCallStatus('Atendendo...');
+        });
+
+        socket.on("ice-candidate", (data) => {
+            console.log("📡 ICE recebido:", data);
             if (peerConnection.current && data.candidate) {
                 peerConnection.current.addIceCandidate(
                     new RTCIceCandidate(data.candidate)
@@ -73,103 +73,139 @@ const VideoChat = () => {
             socket.off("registered");
             socket.off("offer");
             socket.off("answer");
-            socket.off("candidate");
+            socket.off("ice-candidate");
         };
     }, [userId]);
 
     const getLocalMediaStream = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
+            return await navigator.mediaDevices.getUserMedia({
                 video: true,
                 audio: true,
             });
-            return stream;
         } catch (error) {
-            console.error("❌ Erro ao acessar câmera/microfone:", error);
+            console.error("❌ Erro ao acessar mídia:", error);
             throw error;
         }
     };
 
     const createPeerConnection = () => {
         const pc = new RTCPeerConnection();
-
+    
         pc.ontrack = (event) => {
+            console.log("📺 Track recebida!", event.streams[0]);
+    
             if (remoteVideoRef.current && event.streams[0]) {
-                remoteVideoRef.current.srcObject = event.streams[0];
+                const remoteVideo = remoteVideoRef.current;
+    
+                if (remoteVideo.srcObject !== event.streams[0]) {
+                    remoteVideo.srcObject = event.streams[0];
+    
+                    remoteVideo
+                        .play()
+                        .catch((err) =>
+                            console.warn("⚠️ Erro ao reproduzir vídeo remoto:", err)
+                        );
+                }
             }
         };
-
+    
         pc.onicecandidate = (event) => {
-            if (event.candidate && targetUserId) {
+            if (event.candidate) {
+                const target = targetUserIdRef.current;
+                if (!target) {
+                    console.warn("🚫 ICE gerado, mas targetUserId é null");
+                    return;
+                }
+    
+                console.log("🎯 ICE gerado:", event.candidate);
                 socket.emit("ice-candidate", {
                     candidate: event.candidate,
-                    to: targetUserId,
+                    to: target,
                 });
+            } else {
+                console.log("✅ Final dos ICE candidates");
             }
         };
-
+    
         return pc;
     };
+    
 
     const startCall = async (toUserId) => {
         if (!isRegistered || !userId) return;
-
-        console.log("📞 Iniciando chamada para:", toUserId);
-        setTargetUserId(toUserId);
+       
+        targetUserIdRef.current = toUserId;
+        
+        setCallStatus(`Ligando...`);
         peerConnection.current = createPeerConnection();
-
+    
+        const stream = await getLocalMediaStream();
+        stream.getTracks().forEach((track) =>
+            peerConnection.current.addTrack(track, stream)
+        );
+    
+        // ❌ Não exibe vídeo local ainda — só após o answer
+    
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
-
+    
         socket.emit("call-user", {
             to: toUserId,
             from: userId,
             offer,
         });
     };
+    
 
     const acceptCall = async () => {
         if (!incomingCall) return;
+    
 
-        console.log("📲 Aceitando chamada de:", incomingCall.from);
-        setTargetUserId(incomingCall.from);
+        targetUserIdRef.current = incomingCall.from;
+        
+        setCallStatus(`Ligando...`);
         peerConnection.current = createPeerConnection();
-
+    
         const stream = await getLocalMediaStream();
         stream.getTracks().forEach((track) =>
             peerConnection.current.addTrack(track, stream)
         );
+    
         if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
         }
-
+    
         await peerConnection.current.setRemoteDescription(
             new RTCSessionDescription(incomingCall.offer)
         );
-
+    
         const answer = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(answer);
-
+    
         socket.emit("answer", {
             answer,
             to: incomingCall.from,
         });
-
+    
         setIsCalling(true);
         setIncomingCall(null);
     };
+    
+    
 
     const hangUp = () => {
-        console.log("📴 Encerrando chamada...");
         if (peerConnection.current) {
             peerConnection.current.close();
             peerConnection.current = null;
         }
-
+    
         setIsCalling(false);
+       
+        setCallStatus('');
         setIncomingCall(null);
-        setTargetUserId(null);
-
+        targetUserIdRef.current = null;
+    
         if (localVideoRef.current) localVideoRef.current.srcObject = null;
         if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     };
@@ -201,7 +237,8 @@ const VideoChat = () => {
                 </button>
             )}
         </div>
-    );
+      );
+      
 };
 
 export default VideoChat;
