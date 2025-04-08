@@ -24,6 +24,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+   
 }
 
 /* 📜 Formulário */
@@ -163,3 +164,4 @@ p {
         font-size: 1rem;
     }
 }
+

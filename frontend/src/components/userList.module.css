@@ -1,0 +1,48 @@
+/* Lista de usuários à esquerda */
+.userList {
+  width: 25%;
+  background-color: #fff;
+  border-right: 1px solid #ddd;
+  overflow-y: auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Conteúdo do chat à direita */
+.chatContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Lista de usuários - módulo */
+.user_list {
+  width: 280px;
+  background-color: #f1f1f1;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+  padding: 1rem;
+  height: 90vh;
+}
+
+.user_item {
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: background 0.2s ease;
+}
+
+.user_item:hover {
+  background-color: #e0e0e0;
+}
+
+.chat_window {
+  flex: 1;
+  background-color: #fff;
+  padding: 1rem;
+  overflow-y: auto;
+}

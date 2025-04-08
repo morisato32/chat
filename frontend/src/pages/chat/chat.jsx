@@ -8,12 +8,13 @@ import {
   MdMic,
   MdStop,
   MdMoreVert,
-  
 } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
 
-import VideoChat from "../../components/videoChat"
+import VideoChat from "../../components/videoChat";
+
+import UserList from "../../components/UserList";
 
 const socket = io("http://localhost:5000");
 
@@ -26,6 +27,7 @@ function Chat() {
   const messagesEndRef = useRef(null);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editedText, setEditedText] = useState(""); // Ao definir o estado, garanta que ele comece com "" para evitar valores undefined:
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -95,6 +97,7 @@ function Chat() {
     if (mimeType.startsWith("image/")) return "imagem";
     if (mimeType.startsWith("audio/")) return "audio";
     if (mimeType.startsWith("video/")) return "video";
+    if (mimeType === "application/pdf") return "pdf";
     return "arquivo";
   };
 
@@ -191,120 +194,206 @@ function Chat() {
       }
     }
   };
-  
 
   return (
     <div className={styles.container}>
-      
-      <h2 className={styles.userName}>{userName} batendo papo...</h2>
-      <label className={styles.uploadButton}>
-          <MdFileUpload />
-          <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        </label>
-
-        {file && <span className={styles.fileName}>{file.name}</span>}
-
-      
-      <VideoChat/>
-
-      <ul className={styles.messages}>
-        {messages.map((message, index) => (
-          <li
-            key={message.id}
-            className={
-              message.userId === userId ? styles.sent : styles.received
-            }
-          >
-            <div className={styles.messageHeader}>
-              <span>{message.user?.name || "Desconhecido"}</span>
-              <div className={styles.moreOptionsContainer}>
-                <MdMoreVert
-                  className={styles.moreOptions}
-                  onClick={() => toggleMenu(index)}
-                />
-                {openMenuIndex === index && (
-                  <div className={styles.dropdownMenu}>
-                    <button onClick={() => deleteMessage(index, message.id)}>
-                      Excluir
-                    </button>
-                    <button onClick={() => setEditingMessageId(message.id)}>
-                      Editar
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Campo de edição dentro da mensagem */}
-            {editingMessageId === message.id ? (
-              <div className={styles.editContainer}>
-                <input
-                  type="text"
-                  value={editedText || ""} //Garanta que editedText nunca seja undefined ou null, definindo um valor padrão ("").
-                  onChange={(e) => setEditedText(e.target.value)}
-                />
-                <button onClick={() => updateMessage(message.id, editedText)}>
-                  {console.log(editedText)}
-                  Salvar
-                </button>
-                <button onClick={() => setEditingMessageId(null)}>
-                  Cancelar
-                </button>
-              </div>
-            ) : (
-              <div>
-                {message.tipoMidia === "imagem" ? (
-                  <img
-                    src={message.conteudo}
-                    alt="Imagem enviada"
-                    className={styles.media}
-                  />
-                ) : message.tipoMidia === "audio" ? (
-                  <audio controls>
-                    <source src={message.conteudo} type="audio/webm" />
-                    Seu navegador não suporta áudio.
-                  </audio>
-                ) : message.tipoMidia === "video" ? (
-                  <video controls className={styles.video}>
-                    <source src={message.conteudo} type="video/mp4" />
-                    Seu navegador não suporta vídeos.
-                  </video>
-                ) : (
-                  <p>{message.conteudo}</p>
-                )}
-              </div>
-            )}
-          </li>
-        ))}
-        <div ref={messagesEndRef} />
-      </ul>
-
-      <form className={styles.form} onSubmit={sendMessage}>
-        <input
-          className={styles.input}
-          type="text"
-          autoComplete="off"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Digite uma mensagem..."
+      <div className={styles.chat_layout}>
+        {/* Lado esquerdo - Lista de usuários */}
+        <UserList
+          onSelectUser={(user) => console.log("Selecionado:", user.name)}
         />
 
-        {!newMessage && !file ? (
-          <button
-            type="button"
-            onClick={isRecording ? stopRecording : startRecording}
-            className={styles.chat_microfone}
-          >
-            {isRecording ? <MdStop color="red" /> : <MdMic />}
-          </button>
-        ) : (
-          <button className= {styles.chat_button} type="submit">
-            <MdArrowRight />
-          </button>
-        )}
+        {/* Lado direito - Conteúdo do chat */}
+        <div className={styles.chat_content}>
+          <h2 className={styles.userName}>{userName} batendo papo...</h2>
 
-       
-      </form>
+          <label className={styles.uploadButton}>
+            <MdFileUpload />
+            <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+          </label>
+
+          {file && <span className={styles.fileName}>{file.name}</span>}
+
+          <VideoChat userName={userName} />
+
+          <ul className={styles.messages}>
+            {messages.map((message, index) => (
+              <li
+                key={message.id}
+                className={
+                  message.userId === userId ? styles.sent : styles.received
+                }
+              >
+                <div className={styles.messageHeader}>
+                  <span>{message.user?.name || "Desconhecido"}</span>
+                  <div className={styles.moreOptionsContainer}>
+                    <MdMoreVert
+                      className={styles.moreOptions}
+                      onClick={() => toggleMenu(index)}
+                    />
+                    {openMenuIndex === index && (
+                      <div className={styles.dropdownMenu}>
+                        <button
+                          onClick={() => deleteMessage(index, message.id)}
+                        >
+                          Excluir
+                        </button>
+                        <button onClick={() => setEditingMessageId(message.id)}>
+                          Editar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {editingMessageId === message.id ? (
+                  <div className={styles.editContainer}>
+                    <input
+                      type="text"
+                      value={editedText || ""}
+                      onChange={(e) => setEditedText(e.target.value)}
+                    />
+                    <button
+                      onClick={() => updateMessage(message.id, editedText)}
+                    >
+                      Salvar
+                    </button>
+                    <button onClick={() => setEditingMessageId(null)}>
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {message.tipoMidia === "imagem" ? (
+                      <img
+                        src={message.conteudo}
+                        alt="Imagem enviada"
+                        className={styles.media}
+                      />
+                    ) : message.tipoMidia === "audio" ? (
+                      <audio controls>
+                        <source src={message.conteudo} type="audio/webm" />
+                        Seu navegador não suporta áudio.
+                      </audio>
+                    ) : message.tipoMidia === "video" ? (
+                      <video controls className={styles.video}>
+                        <source src={message.conteudo} type="video/mp4" />
+                        Seu navegador não suporta vídeos.
+                      </video>
+                    ) : message.tipoMidia === "pdf" ? (
+                      <div className={styles.pdfContainer}>
+                        <div className={styles.pdfHeader}>
+                          <span className={styles.pdfIcon}>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="40"
+                              height="40"
+                              viewBox="0 0 64 64"
+                            >
+                              <defs>
+                                <linearGradient
+                                  id="grad"
+                                  x1="0%"
+                                  y1="0%"
+                                  x2="100%"
+                                  y2="100%"
+                                >
+                                  <stop
+                                    offset="0%"
+                                    style={{
+                                      stopColor: "#f44336",
+                                      stopOpacity: 1,
+                                    }}
+                                  />
+                                  <stop
+                                    offset="100%"
+                                    style={{
+                                      stopColor: "#c62828",
+                                      stopOpacity: 1,
+                                    }}
+                                  />
+                                </linearGradient>
+                              </defs>
+                              <g>
+                                <path
+                                  d="M8 4h32l16 16v40c0 2.2-1.8 4-4 4H8c-2.2 0-4-1.8-4-4V8c0-2.2 1.8-4 4-4z"
+                                  fill="url(#grad)"
+                                />
+                                <path d="M40 4v16h16L40 4z" fill="#e57373" />
+                                <text
+                                  x="14"
+                                  y="50"
+                                  fontSize="18"
+                                  fontWeight="bold"
+                                  fill="white"
+                                  fontFamily="Arial, sans-serif"
+                                >
+                                  PDF
+                                </text>
+                              </g>
+                            </svg>
+                          </span>
+
+                          <span className={styles.pdfLabel}>
+                            Visualização do PDF
+                          </span>
+                        </div>
+
+                        <div className={styles.pdfBox}>
+                          <iframe
+                            src={message.conteudo}
+                            title="Visualizador de PDF"
+                            className={styles.pdfIframe}
+                            frameBorder="0"
+                          ></iframe>
+                        </div>
+
+                        <a
+                          href={message.conteudo}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.pdfDownload}
+                        >
+                          📥 Baixar PDF
+                        </a>
+                      </div>
+                    ) : (
+                      <p>{message.conteudo}</p>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+            <div ref={messagesEndRef} />
+          </ul>
+
+          <form className={styles.form} onSubmit={sendMessage}>
+            <input
+              className={styles.input}
+              type="text"
+              autoComplete="off"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Digite uma mensagem..."
+            />
+
+            {!newMessage && !file ? (
+              <button
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={styles.chat_microfone}
+              >
+                {isRecording ? <MdStop color="red" /> : <MdMic />}
+              </button>
+            ) : (
+              <button className={styles.chat_button} type="submit">
+                <MdArrowRight />
+              </button>
+            )}
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
