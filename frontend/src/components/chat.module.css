@@ -1,16 +1,59 @@
+*{
+  font-family: 'Inter', sans-serif;
+}
+
+p{
+  font-size: 16px;
+}
+
+
 .userName {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: #333;
+  font-size: 1rem;
+  color: #2c2c2c;
 }
 
 .chat_layout {
   display: flex;
-  width: 100%;
-  height: 90vh;
-  max-width: 1280px;
+  width: 85vw;
+  height: 95vh;
+  
 }
+
+.chat_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* espaço entre upload, nome do arquivo e vídeo */
+  cursor: pointer;
+}
+
+.headerActions > *:nth-child(2) {
+ margin-top: 5px;
+}
+
+
+.uploadButton {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+ 
+}
+
+.uploadButton input {
+  display: none;
+}
+
+.fileName {
+  font-size: 0.9rem;
+  color: #888;
+}
+
 
 .chat_content {
   flex: 1;
@@ -19,34 +62,7 @@
   padding: 1rem;
   background-color: #fff;
   overflow-y: auto;
-  height: 90vh;
-}
-
-.uploadButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: #e0e0e0;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  cursor: pointer;
-  width: fit-content;
-  margin-bottom: 1rem;
-  transition: background 0.3s ease;
-}
-
-.uploadButton:hover {
-  background-color: #d0d0d0;
-}
-
-.uploadButton input {
-  display: none;
-}
-
-.fileName {
-  margin-left: 1rem;
-  font-size: 0.9rem;
-  color: #555;
+  height: 95vh;
 }
 
 .messages {
@@ -63,23 +79,27 @@
 .sent {
   align-self: flex-end;
   background-color: #d1e7ff;
-  color: #000;
+  color: #2c2c2c;
   border-radius: 12px 12px 0 12px;
   padding: 0.6rem 1rem;
   max-width: 70%;
   word-wrap: break-word;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 .received {
   align-self: flex-start;
   background-color: #fff;
-  color: #000;
+  color: #2c2c2c;
   border-radius: 12px 12px 12px 0;
   padding: 0.6rem 1rem;
   max-width: 70%;
   word-wrap: break-word;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 .messageHeader {
@@ -187,16 +207,13 @@ input::placeholder {
 .chat_microfone,
 .chat_button {
   border: none;
-  background-color: transparent;
-  font-size: 1.5rem;
+ font-size: 1.5rem;
   cursor: pointer;
   padding: 0.3rem;
-  width: 50px;
+ 
 }
 
-.chat_microfone :hover {
-  color: #fff;
-}
+
 
 
 /* Responsividade */
@@ -381,6 +398,9 @@ input::placeholder {
 .pdfIframe::-webkit-scrollbar {
   display: none;
 }
+
+/*responsividade */
+
 
 
 

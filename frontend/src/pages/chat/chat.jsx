@@ -205,16 +205,23 @@ function Chat() {
 
         {/* Lado direito - Conteúdo do chat */}
         <div className={styles.chat_content}>
-          <h2 className={styles.userName}>{userName} batendo papo...</h2>
+          <div className={styles.chat_header}>
+            <span className={styles.userName}>{userName}</span>
 
-          <label className={styles.uploadButton}>
-            <MdFileUpload />
-            <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-          </label>
+            <div className={styles.headerActions}>
+              <label className={styles.uploadButton}>
+                <MdFileUpload />
+                <input
+                  type="file"
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+              </label>
 
-          {file && <span className={styles.fileName}>{file.name}</span>}
+              {file && <span className={styles.fileName}>{file.name}</span>}
 
-          <VideoChat userName={userName} />
+              <VideoChat userName={userName} />
+            </div>
+          </div>
 
           <ul className={styles.messages}>
             {messages.map((message, index) => (
@@ -379,17 +386,17 @@ function Chat() {
             />
 
             {!newMessage && !file ? (
-              <button
+              <span
+                className={styles.chat_microfone}
                 type="button"
                 onClick={isRecording ? stopRecording : startRecording}
-                className={styles.chat_microfone}
               >
                 {isRecording ? <MdStop color="red" /> : <MdMic />}
-              </button>
+              </span>
             ) : (
-              <button className={styles.chat_button} type="submit">
+              <span className={styles.chat_button} type="submit">
                 <MdArrowRight />
-              </button>
+              </span>
             )}
           </form>
         </div>

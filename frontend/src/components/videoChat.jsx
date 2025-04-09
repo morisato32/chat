@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import io from "socket.io-client";
-import { MdVideoCall } from "react-icons/md";
-import './videoChat.module.css'
+import { MdVideoCall, MdCallEnd,MdMic, MdMicOff } from "react-icons/md";
+import styles from '../components/videoChat.module.css'
 
 const socket = io("http://localhost:5000");
 
@@ -11,7 +11,7 @@ const VideoChat = ({ userName }) => {
         return dados ? JSON.parse(dados).id : null;
 
     });
-
+    const [isMuted, setIsMuted] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
     const [isCalling, setIsCalling] = useState(false);
     const [incomingCall, setIncomingCall] = useState(null);
@@ -20,6 +20,14 @@ const VideoChat = ({ userName }) => {
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
     const peerConnection = useRef(null);
+
+    const toggleMute = () => {
+        const stream = localVideoRef.current.srcObject;
+        if (stream) {
+          stream.getAudioTracks().forEach(track => (track.enabled = isMuted));
+          setIsMuted(!isMuted);
+        }
+      };
 
     useEffect(() => {
         if (!userId) return;
@@ -185,17 +193,17 @@ const VideoChat = ({ userName }) => {
     };
 
     return (
-        <div className="video-chat">
+        <div className={styles.video_chat}>
             {/* Ícone para iniciar chamada (remetente) */}
             {!isCalling && !incomingCall && (
-                <div className="video-call-icon" onClick={() => startCall("67eae4061e4d90cc313625aa")}>
-                    <MdVideoCall size={40} color="#0ff" />
+                <div className={styles.video_call_icon} onClick={() => startCall("67eae4061e4d90cc313625aa")}>
+                    <MdVideoCall />
                 </div>
             )}
 
             {/* Chamada recebida (destinatário) */}
             {!isCalling && incomingCall && (
-                <div className="incoming-call">
+                <div className={styles.incoming_call}>
                     <p>📞 Chamada recebida de {incomingCall?.userName}</p>
                     <button onClick={acceptCall}>Atender</button>
                     <button onClick={hangUp} className="hang-up-btn">Encerrar Chamada</button>
@@ -203,25 +211,24 @@ const VideoChat = ({ userName }) => {
             )}
 
             {/* Overlay de video chamada ativa */}
-            <div className="video-overlay" style={{ display: isCalling ? "flex" : "none" }}>
-                <video
-                    ref={remoteVideoRef}
-                    autoPlay
-                    playsInline
-                    className="remote-video"
-                />
-                <video
-                    ref={localVideoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="local-video"
-                />
-                <button onClick={hangUp} className="hang-up-btn">
-                    Encerrar Chamada
-                </button>
+            <div className={styles.video_overlay} style={{ display: isCalling ? "flex" : "none" }}>
+
+                <video className={styles.remote_video} autoPlay playsInline ref={remoteVideoRef} />
+                <video className={styles.local_video} autoPlay muted playsInline ref={localVideoRef} />
+
+                {/* Controles flutuantes estilo Zoom */}
+                <div className={styles.video_controls}>
+                    <button className={styles.control_btn} onClick={toggleMute}>
+                        {isMuted ? <MdMicOff /> : <MdMic />}
+                    </button>
+                    <button className={styles.control_btn} onClick={hangUp}>
+                        <MdCallEnd />
+                    </button>
+                </div>
             </div>
+
         </div>
+
 
     );
 
