@@ -3,7 +3,7 @@
 }
 
 p{
-  font-size: 16px;
+  font-size: 15px;
 }
 
 
@@ -189,6 +189,23 @@ p{
   border-top: 1px solid #ddd;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
 }
+/*emoji*/
+.emojiButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #888; /* Cor neutra inicial */
+  transition: color 0.3s ease, transform 0.2s ease;
+  margin-right: 8px;
+  display: flex;
+  align-items:;
+  justify-content: center;
+}
+
+
+
+
 
 .input {
   flex: 1;
@@ -211,6 +228,13 @@ input::placeholder {
   cursor: pointer;
   padding: 0.3rem;
  
+}
+
+.chat_button{
+  width:25px;
+  margin-bottom:10px;
+  background:none;
+  border:none;
 }
 
 

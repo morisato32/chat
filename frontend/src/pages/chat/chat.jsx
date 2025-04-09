@@ -8,6 +8,7 @@ import {
   MdMic,
   MdStop,
   MdMoreVert,
+  MdEmojiEmotions
 } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,10 @@ import { useNavigate } from "react-router-dom";
 import VideoChat from "../../components/videoChat";
 
 import UserList from "../../components/UserList";
+
+import EmojiPicker from '../../components/EmojiPicker';
+
+
 
 const socket = io("http://localhost:5000");
 
@@ -27,8 +32,17 @@ function Chat() {
   const messagesEndRef = useRef(null);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editedText, setEditedText] = useState(""); // Ao definir o estado, garanta que ele comece com "" para evitar valores undefined:
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
 
   const navigate = useNavigate();
+
+  // emoji
+  const handleEmojiSelect = (emoji) => {
+    setNewMessage((prev) => prev + emoji.native);
+    setShowEmojiPicker(false);
+  };
+  
 
   useEffect(() => {
     socket.emit("requestMessages");
@@ -43,6 +57,7 @@ function Chat() {
       socket.off("receiveMessage");
     };
   }, []);
+  
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -376,14 +391,25 @@ function Chat() {
           </ul>
 
           <form className={styles.form} onSubmit={sendMessage}>
-            <input
-              className={styles.input}
-              type="text"
-              autoComplete="off"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Digite uma mensagem..."
-            />
+  <span
+    type="button"
+    className={styles.emojiButton}
+    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+  >
+    <MdEmojiEmotions />
+  </span>
+
+  {showEmojiPicker && <EmojiPicker onSelect={handleEmojiSelect} />}
+
+  <input
+    className={styles.input}
+    type="text"
+    autoComplete="off"
+    value={newMessage}
+    onChange={(e) => setNewMessage(e.target.value)}
+    placeholder="Digite uma mensagem..."
+  />
+
 
             {!newMessage && !file ? (
               <span
@@ -394,9 +420,9 @@ function Chat() {
                 {isRecording ? <MdStop color="red" /> : <MdMic />}
               </span>
             ) : (
-              <span className={styles.chat_button} type="submit">
+              <button className={styles.chat_button} type="submit">
                 <MdArrowRight />
-              </span>
+              </button>
             )}
           </form>
         </div>

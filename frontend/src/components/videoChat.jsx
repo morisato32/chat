@@ -196,7 +196,7 @@ const VideoChat = ({ userName }) => {
         <div className={styles.video_chat}>
             {/* Ícone para iniciar chamada (remetente) */}
             {!isCalling && !incomingCall && (
-                <div className={styles.video_call_icon} onClick={() => startCall("67eae4061e4d90cc313625aa")}>
+                <div className={styles.video_call_icon} onClick={() => startCall("67f6dc26d956a177dc1fd16e")}>
                     <MdVideoCall />
                 </div>
             )}
