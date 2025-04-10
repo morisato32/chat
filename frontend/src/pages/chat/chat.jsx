@@ -8,7 +8,7 @@ import {
   MdMic,
   MdStop,
   MdMoreVert,
-  MdEmojiEmotions
+  MdEmojiEmotions,
 } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
@@ -17,9 +17,7 @@ import VideoChat from "../../components/videoChat";
 
 import UserList from "../../components/UserList";
 
-import EmojiPicker from '../../components/EmojiPicker';
-
-
+import EmojiPicker from "../../components/EmojiPicker";
 
 const socket = io("http://localhost:5000");
 
@@ -34,6 +32,7 @@ function Chat() {
   const [editedText, setEditedText] = useState(""); // Ao definir o estado, garanta que ele comece com "" para evitar valores undefined:
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  const [destinatario, setDestinatario] = useState(null);
 
   const navigate = useNavigate();
 
@@ -42,35 +41,61 @@ function Chat() {
     setNewMessage((prev) => prev + emoji.native);
     setShowEmojiPicker(false);
   };
-  
 
-  useEffect(() => {
-    socket.emit("requestMessages");
+  // 🧠 Por que mudar a dependência do useEffect?
+  // Com [], ele roda só uma vez no carregamento da página.
 
-    socket.on("loadMessages", setMessages);
-    socket.on("receiveMessage", (message) =>
-      setMessages((prevMessages) => [...prevMessages, message])
-    );
+  // Mas userId e destinatario podem vir depois (async ou mudança de estado).
 
-    return () => {
-      socket.off("loadMessages");
-      socket.off("receiveMessage");
-    };
-  }, []);
-  
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  // Colocando [socket, userId, destinatario], você garante que o requestMessages será reenviado quando o usuário for selecionado.
 
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const userId = user.id || null;
   const userName = user.name || "Usuário Desconhecido";
 
-  if (!user.token || !user) {
+  if (!user || !user.token) {
     navigate("/");
   }
+
+  useEffect(() => {
+    if (!socket || !userId || !destinatario?.id) return;
+
+    socket.emit("requestMessages", {
+      fromUserId: userId,
+      toUserId: destinatario.id,
+    });
+
+    socket.on("loadMessages", setMessages);
+
+    return () => {
+      socket.off("loadMessages");
+    };
+  }, [socket, userId, destinatario]);
+
+  useEffect(() => {
+    if (!socket || !userId || !destinatario?.id) return;
+
+    socket.emit("requestMessages", {
+      fromUserId: userId,
+      toUserId: destinatario.id,
+    });
+
+    socket.on("loadMessages", setMessages);
+
+    socket.on("receivePrivateMessage", (message) =>
+      setMessages((prevMessages) => [...prevMessages, message])
+    );
+
+    return () => {
+      socket.off("loadMessages");
+      socket.off("receivePrivateMessage");
+    };
+  }, [userId, destinatario]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -82,13 +107,23 @@ function Chat() {
     }
 
     if (newMessage.trim()) {
-      socket.emit("sendMessage", {
+      console.log("Enviando mensagem para:", destinatario?.id);
+
+      socket.emit("sendPrivateMessage", {
         conteudo: newMessage,
-        userId,
+        fromUserId: userId,
+        toUserId: destinatario?.id,
         tipoMidia: "texto",
       });
       setNewMessage("");
     }
+
+    console.log("Emitindo sendPrivateMessage:", {
+      conteudo: newMessage,
+      fromUserId: userId,
+      toUserId: destinatario.id,
+      tipoMidia: "texto",
+    });
   };
 
   const uploadFile = async (file, fileName, tipoMidia) => {
@@ -98,9 +133,10 @@ function Chat() {
 
     try {
       const response = await api.post("http://localhost:5000/upload", formData);
-      socket.emit("sendMessage", {
+      socket.emit("sendPrivateMessage", {
         conteudo: response.data.midiaUrl,
-        userId,
+        fromUserId: userId,
+        toUserId: destinatario.id,
         tipoMidia,
       });
     } catch (error) {
@@ -214,9 +250,7 @@ function Chat() {
     <div className={styles.container}>
       <div className={styles.chat_layout}>
         {/* Lado esquerdo - Lista de usuários */}
-        <UserList
-          onSelectUser={(user) => console.log("Selecionado:", user.name)}
-        />
+        <UserList onSelectUser={(user) => setDestinatario(user)} />
 
         {/* Lado direito - Conteúdo do chat */}
         <div className={styles.chat_content}>
@@ -239,177 +273,191 @@ function Chat() {
           </div>
 
           <ul className={styles.messages}>
-            {messages.map((message, index) => (
-              <li
-                key={message.id}
-                className={
-                  message.userId === userId ? styles.sent : styles.received
-                }
-              >
-                <div className={styles.messageHeader}>
-                  <span>{message.user?.name || "Desconhecido"}</span>
-                  <div className={styles.moreOptionsContainer}>
-                    <MdMoreVert
-                      className={styles.moreOptions}
-                      onClick={() => toggleMenu(index)}
-                    />
-                    {openMenuIndex === index && (
-                      <div className={styles.dropdownMenu}>
-                        <button
-                          onClick={() => deleteMessage(index, message.id)}
-                        >
-                          Excluir
-                        </button>
-                        <button onClick={() => setEditingMessageId(message.id)}>
-                          Editar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {editingMessageId === message.id ? (
-                  <div className={styles.editContainer}>
-                    <input
-                      type="text"
-                      value={editedText || ""}
-                      onChange={(e) => setEditedText(e.target.value)}
-                    />
-                    <button
-                      onClick={() => updateMessage(message.id, editedText)}
-                    >
-                      Salvar
-                    </button>
-                    <button onClick={() => setEditingMessageId(null)}>
-                      Cancelar
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    {message.tipoMidia === "imagem" ? (
-                      <img
-                        src={message.conteudo}
-                        alt="Imagem enviada"
-                        className={styles.media}
+            {messages
+              .filter(
+                (message) =>
+                  (message.userId === userId &&
+                    message.destinatarioId === destinatario?.id) ||
+                  (message.userId === destinatario?.id &&
+                    message.destinatarioId === userId)
+              )
+              .map((message, index) => (
+                <li
+                  key={message.id}
+                  className={
+                    message.userId === userId ? styles.sent : styles.received
+                  }
+                >
+                  <div className={styles.messageHeader}>
+                    <span>{message.user?.name || "Desconhecido"}</span>
+                    <div className={styles.moreOptionsContainer}>
+                      <MdMoreVert
+                        className={styles.moreOptions}
+                        onClick={() => toggleMenu(index)}
                       />
-                    ) : message.tipoMidia === "audio" ? (
-                      <audio controls>
-                        <source src={message.conteudo} type="audio/webm" />
-                        Seu navegador não suporta áudio.
-                      </audio>
-                    ) : message.tipoMidia === "video" ? (
-                      <video controls className={styles.video}>
-                        <source src={message.conteudo} type="video/mp4" />
-                        Seu navegador não suporta vídeos.
-                      </video>
-                    ) : message.tipoMidia === "pdf" ? (
-                      <div className={styles.pdfContainer}>
-                        <div className={styles.pdfHeader}>
-                          <span className={styles.pdfIcon}>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="40"
-                              height="40"
-                              viewBox="0 0 64 64"
-                            >
-                              <defs>
-                                <linearGradient
-                                  id="grad"
-                                  x1="0%"
-                                  y1="0%"
-                                  x2="100%"
-                                  y2="100%"
-                                >
-                                  <stop
-                                    offset="0%"
-                                    style={{
-                                      stopColor: "#f44336",
-                                      stopOpacity: 1,
-                                    }}
-                                  />
-                                  <stop
-                                    offset="100%"
-                                    style={{
-                                      stopColor: "#c62828",
-                                      stopOpacity: 1,
-                                    }}
-                                  />
-                                </linearGradient>
-                              </defs>
-                              <g>
-                                <path
-                                  d="M8 4h32l16 16v40c0 2.2-1.8 4-4 4H8c-2.2 0-4-1.8-4-4V8c0-2.2 1.8-4 4-4z"
-                                  fill="url(#grad)"
-                                />
-                                <path d="M40 4v16h16L40 4z" fill="#e57373" />
-                                <text
-                                  x="14"
-                                  y="50"
-                                  fontSize="18"
-                                  fontWeight="bold"
-                                  fill="white"
-                                  fontFamily="Arial, sans-serif"
-                                >
-                                  PDF
-                                </text>
-                              </g>
-                            </svg>
-                          </span>
-
-                          <span className={styles.pdfLabel}>
-                            Visualização do PDF
-                          </span>
+                      {openMenuIndex === index && (
+                        <div className={styles.dropdownMenu}>
+                          <button
+                            onClick={() => deleteMessage(index, message.id)}
+                          >
+                            Excluir
+                          </button>
+                          <button
+                            onClick={() => setEditingMessageId(message.id)}
+                          >
+                            Editar
+                          </button>
                         </div>
-
-                        <div className={styles.pdfBox}>
-                          <iframe
-                            src={message.conteudo}
-                            title="Visualizador de PDF"
-                            className={styles.pdfIframe}
-                            frameBorder="0"
-                          ></iframe>
-                        </div>
-
-                        <a
-                          href={message.conteudo}
-                          download
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.pdfDownload}
-                        >
-                          📥 Baixar PDF
-                        </a>
-                      </div>
-                    ) : (
-                      <p>{message.conteudo}</p>
-                    )}
+                      )}
+                    </div>
                   </div>
-                )}
-              </li>
-            ))}
+
+                  {editingMessageId === message.id ? (
+                    <div className={styles.editContainer}>
+                      <input
+                        type="text"
+                        value={editedText || ""}
+                        onChange={(e) => setEditedText(e.target.value)}
+                      />
+                      <button
+                        onClick={() => updateMessage(message.id, editedText)}
+                      >
+                        Salvar
+                      </button>
+                      <button onClick={() => setEditingMessageId(null)}>
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      {message.tipoMidia === "imagem" ? (
+                        <img
+                          src={message.conteudo}
+                          alt="Imagem enviada"
+                          className={styles.media}
+                        />
+                      ) : message.tipoMidia === "audio" ? (
+                        <audio controls>
+                          <source src={message.conteudo} type="audio/webm" />
+                          Seu navegador não suporta áudio.
+                        </audio>
+                      ) : message.tipoMidia === "video" ? (
+                        <video controls className={styles.video}>
+                          <source src={message.conteudo} type="video/mp4" />
+                          Seu navegador não suporta vídeos.
+                        </video>
+                      ) : message.tipoMidia === "pdf" ? (
+                        <div className={styles.pdfContainer}>
+                          <div className={styles.pdfHeader}>
+                            <span className={styles.pdfIcon}>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="40"
+                                height="40"
+                                viewBox="0 0 64 64"
+                              >
+                                <defs>
+                                  <linearGradient
+                                    id="grad"
+                                    x1="0%"
+                                    y1="0%"
+                                    x2="100%"
+                                    y2="100%"
+                                  >
+                                    <stop
+                                      offset="0%"
+                                      style={{
+                                        stopColor: "#f44336",
+                                        stopOpacity: 1,
+                                      }}
+                                    />
+                                    <stop
+                                      offset="100%"
+                                      style={{
+                                        stopColor: "#c62828",
+                                        stopOpacity: 1,
+                                      }}
+                                    />
+                                  </linearGradient>
+                                </defs>
+                                <g>
+                                  <path
+                                    d="M8 4h32l16 16v40c0 2.2-1.8 4-4 4H8c-2.2 0-4-1.8-4-4V8c0-2.2 1.8-4 4-4z"
+                                    fill="url(#grad)"
+                                  />
+                                  <path d="M40 4v16h16L40 4z" fill="#e57373" />
+                                  <text
+                                    x="14"
+                                    y="50"
+                                    fontSize="18"
+                                    fontWeight="bold"
+                                    fill="white"
+                                    fontFamily="Arial, sans-serif"
+                                  >
+                                    PDF
+                                  </text>
+                                </g>
+                              </svg>
+                            </span>
+
+                            <span className={styles.pdfLabel}>
+                              Visualização do PDF
+                            </span>
+                          </div>
+
+                          <div className={styles.pdfBox}>
+                            <iframe
+                              src={message.conteudo}
+                              title="Visualizador de PDF"
+                              className={styles.pdfIframe}
+                              frameBorder="0"
+                            ></iframe>
+                          </div>
+
+                          <a
+                            href={message.conteudo}
+                            download
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.pdfDownload}
+                          >
+                            📥 Baixar PDF
+                          </a>
+                        </div>
+                      ) : (
+                        <p>{message.conteudo}</p>
+                      )}
+                    </div>
+                  )}
+                </li>
+              ))}
             <div ref={messagesEndRef} />
           </ul>
 
           <form className={styles.form} onSubmit={sendMessage}>
-  <span
-    type="button"
-    className={styles.emojiButton}
-    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-  >
-    <MdEmojiEmotions />
-  </span>
+            <span
+              type="button"
+              className={styles.emojiButton}
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
+              <MdEmojiEmotions />
+            </span>
 
-  {showEmojiPicker && <EmojiPicker onSelect={handleEmojiSelect} />}
+            {showEmojiPicker && <EmojiPicker onSelect={handleEmojiSelect} />}
 
-  <input
-    className={styles.input}
-    type="text"
-    autoComplete="off"
-    value={newMessage}
-    onChange={(e) => setNewMessage(e.target.value)}
-    placeholder="Digite uma mensagem..."
-  />
-
+            <input
+              disabled={!destinatario}
+              className={styles.input}
+              type="text"
+              autoComplete="off"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder={
+                destinatario
+                  ? "Digite uma mensagem..."
+                  : "Selecione um usuário para começar a conversar"
+              }
+            />
 
             {!newMessage && !file ? (
               <span

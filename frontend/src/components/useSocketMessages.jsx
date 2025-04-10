@@ -18,12 +18,14 @@ export function useSocketMessages(socket, userId, selectedUser, setMessages) {
         (message.userId === userId && message.destinatarioId === selectedUser.id) ||
         (message.userId === selectedUser.id && message.destinatarioId === userId);
 
+
+// recebe as mensagens em tempo real
       if (isMessageForThisChat) {
         setMessages((prevMessages) => [...prevMessages, message]);
       }
     };
 
-    // Adiciona listeners
+    // recebe as mensagens iniciais
     socket.on("loadMessages", handleLoadMessages);
     socket.on("receiveMessage", handleReceiveMessage);
 
