@@ -34,6 +34,18 @@ function Chat() {
 
   const [destinatario, setDestinatario] = useState(null);
 
+  const [userIdLogado, setUserIdLogado] = useState(null);
+
+useEffect(() => {
+  const dados = sessionStorage.getItem('user');
+  const storedUserId =JSON.parse(dados).id 
+  
+  if (storedUserId) {
+    setUserIdLogado(storedUserId);
+  }
+}, []);
+
+
   const navigate = useNavigate();
 
   // emoji
@@ -41,6 +53,7 @@ function Chat() {
     setNewMessage((prev) => prev + emoji.native);
     setShowEmojiPicker(false);
   };
+ 
 
   // 🧠 Por que mudar a dependência do useEffect?
   // Com [], ele roda só uma vez no carregamento da página.
@@ -48,7 +61,7 @@ function Chat() {
   // Mas userId e destinatario podem vir depois (async ou mudança de estado).
 
   // Colocando [socket, userId, destinatario], você garante que o requestMessages será reenviado quando o usuário for selecionado.
-
+  
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const userId = user.id || null;
@@ -59,39 +72,41 @@ function Chat() {
   }
 
   useEffect(() => {
-    if (!socket || !userId || !destinatario?.id) return;
-
-    socket.emit("requestMessages", {
-      fromUserId: userId,
-      toUserId: destinatario.id,
-    });
-
-    socket.on("loadMessages", setMessages);
-
-    return () => {
-      socket.off("loadMessages");
-    };
-  }, [socket, userId, destinatario]);
+    if (socket && userId) {
+      socket.emit("registrarUsuario", userId);
+    }
+  }, [socket, userId]);
+  
 
   useEffect(() => {
     if (!socket || !userId || !destinatario?.id) return;
-
+  
+    // Solicita as mensagens antigas
     socket.emit("requestMessages", {
       fromUserId: userId,
       toUserId: destinatario.id,
     });
-
+  
+    // Recebe mensagens antigas
     socket.on("loadMessages", setMessages);
-
-    socket.on("receivePrivateMessage", (message) =>
-      setMessages((prevMessages) => [...prevMessages, message])
-    );
-
+  
+    // Recebe nova mensagem em tempo real
+    socket.on("receivePrivateMessage", (message) => {
+      const isRelevant =
+        (message.userId === userId && message.destinatarioId === destinatario.id) ||
+        (message.userId === destinatario.id && message.destinatarioId === userId);
+  
+      if (isRelevant) {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      }
+    });
+  
     return () => {
       socket.off("loadMessages");
       socket.off("receivePrivateMessage");
     };
-  }, [userId, destinatario]);
+  }, [ userId, destinatario]);
+  
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -245,17 +260,34 @@ function Chat() {
       }
     }
   };
-
+  console.log("ID do usuário logado:", userIdLogado);
   return (
     <div className={styles.container}>
       <div className={styles.chat_layout}>
         {/* Lado esquerdo - Lista de usuários */}
-        <UserList onSelectUser={(user) => setDestinatario(user)} />
+       
+  <UserList
+    onSelectUser={(user) => setDestinatario(user)}
+    userIdLogado={userIdLogado}
+  />
+
 
         {/* Lado direito - Conteúdo do chat */}
         <div className={styles.chat_content}>
           <div className={styles.chat_header}>
-            <span className={styles.userName}>{userName}</span>
+          <span className={styles.userName}>
+  {destinatario?.name || (
+    <dotlottie-player
+      src="https://lottie.host/811e68f3-aa82-4b5d-80dd-e966baba4d2c/N2QYlHQHRw.lottie"
+      background="transparent"
+      speed="1"
+      style={{ width: "300px", height: "300px",display:"flex" }}
+      loop
+      autoplay
+    ></dotlottie-player>
+  )}
+</span>
+
 
             <div className={styles.headerActions}>
               <label className={styles.uploadButton}>
