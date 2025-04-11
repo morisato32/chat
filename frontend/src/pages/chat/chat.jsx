@@ -19,6 +19,8 @@ import UserList from "../../components/UserList";
 
 import EmojiPicker from "../../components/EmojiPicker";
 
+import playNotificationSound from '../../components/notificacaoDaMensagem'
+
 const socket = io("http://localhost:5000");
 
 function Chat() {
@@ -99,7 +101,19 @@ useEffect(() => {
       if (isRelevant) {
         setMessages((prevMessages) => [...prevMessages, message]);
       }
+
+        // Se a mensagem não for do próprio usuário, toca o som
+    if (message.remetenteId !== userId) {
+      playNotificationSound();
+    }
+
+    if (message.remetenteId !== userId && message.remetenteId !== destinatario.id) {
+      playNotificationSound();
+    }
     });
+
+   
+    
   
     return () => {
       socket.off("loadMessages");
