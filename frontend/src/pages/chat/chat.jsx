@@ -9,6 +9,8 @@ import {
   MdStop,
   MdMoreVert,
   MdEmojiEmotions,
+  MdCheck,
+  MdDoneAll
 } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
@@ -19,7 +21,9 @@ import UserList from "../../components/UserList";
 
 import EmojiPicker from "../../components/EmojiPicker";
 
-import playNotificationSound from '../../components/notificacaoDaMensagem'
+import playNotificationSound from "../../components/notificacaoDaMensagem";
+
+
 
 const socket = io("http://localhost:5000");
 
@@ -36,17 +40,18 @@ function Chat() {
 
   const [destinatario, setDestinatario] = useState(null);
 
+  
+
   const [userIdLogado, setUserIdLogado] = useState(null);
 
-useEffect(() => {
-  const dados = sessionStorage.getItem('user');
-  const storedUserId =JSON.parse(dados).id 
-  
-  if (storedUserId) {
-    setUserIdLogado(storedUserId);
-  }
-}, []);
+  useEffect(() => {
+    const dados = sessionStorage.getItem("user");
+    const storedUserId = JSON.parse(dados).id;
 
+    if (storedUserId) {
+      setUserIdLogado(storedUserId);
+    }
+  }, []);
 
   const navigate = useNavigate();
 
@@ -55,7 +60,6 @@ useEffect(() => {
     setNewMessage((prev) => prev + emoji.native);
     setShowEmojiPicker(false);
   };
- 
 
   // 🧠 Por que mudar a dependência do useEffect?
   // Com [], ele roda só uma vez no carregamento da página.
@@ -63,7 +67,7 @@ useEffect(() => {
   // Mas userId e destinatario podem vir depois (async ou mudança de estado).
 
   // Colocando [socket, userId, destinatario], você garante que o requestMessages será reenviado quando o usuário for selecionado.
-  
+
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const userId = user.id || null;
@@ -78,49 +82,120 @@ useEffect(() => {
       socket.emit("registrarUsuario", userId);
     }
   }, [socket, userId]);
-  
 
   useEffect(() => {
     if (!socket || !userId || !destinatario?.id) return;
-  
+
     // Solicita as mensagens antigas
     socket.emit("requestMessages", {
       fromUserId: userId,
       toUserId: destinatario.id,
     });
-  
+
     // Recebe mensagens antigas
     socket.on("loadMessages", setMessages);
-  
+
     // Recebe nova mensagem em tempo real
     socket.on("receivePrivateMessage", (message) => {
       const isRelevant =
         (message.userId === userId && message.destinatarioId === destinatario.id) ||
         (message.userId === destinatario.id && message.destinatarioId === userId);
-  
+    
       if (isRelevant) {
         setMessages((prevMessages) => [...prevMessages, message]);
-      }
-
-        // Se a mensagem não for do próprio usuário, toca o som
-    if (message.remetenteId !== userId) {
-      playNotificationSound();
-    }
-
-    if (message.remetenteId !== userId && message.remetenteId !== destinatario.id) {
-      playNotificationSound();
-    }
-    });
-
-   
     
-  
+        // Marca como lida se a mensagem veio do outro usuário e ele está em conversa com você
+        if (message.userId === destinatario.id) {
+          socket.emit("marcarMensagemComoLida", {
+            mensagemId: message.id,
+            usuarioId: userId,
+          });
+        }
+      }
+    
+      // Toca som se a mensagem veio de outra pessoa
+      if (message.userId !== userId) {
+        playNotificationSound();
+      }
+    });
+    
+
     return () => {
       socket.off("loadMessages");
       socket.off("receivePrivateMessage");
     };
-  }, [ userId, destinatario]);
+  }, [userId, destinatario]);
+
+  // status da mensagem
+
+  // Quando abre a conversa com alguém, marca as mensagens como lidas
+useEffect(() => {
+  if (!destinatario?.id) return;
+
+  socket.emit("marcar_como_lida", {
+    remetenteId: destinatario.id, // <- Quem enviou a mensagem (userId no banco)
+    destinatarioId: userId          // <- eu (o logado) estou lendo agora
+  });
+
+  socket.emit("entrouNaConversa", {
+    userId: userId,
+    conversandoComId: destinatario.id,
+  });
   
+
+  console.log("📤 Emitido 'marcar_como_lida' de:", userId, "para:", destinatario.id);
+}, [destinatario,userId]);
+
+// Quando o servidor responde com as mensagens marcadas como lidas
+useEffect(() => {
+  socket.on("mensagens_lidas", ({ de, mensagens }) => {
+    console.log("🔵 Mensagens lidas recebidas de:", de, mensagens);
+
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.userId === userId &&
+        msg.destinatarioId === de &&
+        mensagens.some((m) => m.id === msg.id)
+          ? { ...msg, status: "LIDA" }
+          : msg
+      )
+    );
+  });
+
+  return () => {
+    socket.off("mensagens_lidas");
+  };
+}, [userId]);
+
+
+
+
+  
+
+  const renderStatusIcon = (status) => {
+    switch (status) {
+      case "ENVIADA":
+        return (
+          <span title="Enviada">
+            <MdCheck style={{ color: "#333" }}/>
+          </span>
+        );
+      case "ENTREGUE":
+        return (
+          <span title="Entregue">
+            <MdDoneAll style={{ color: "#333" }}/>
+          </span>
+        );
+      case "LIDA":
+        return (
+          <span title="Lida">
+            <MdDoneAll style={{color: "dodgerblue"}}/>
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -275,33 +350,32 @@ useEffect(() => {
     }
   };
   console.log("ID do usuário logado:", userIdLogado);
+
   return (
     <div className={styles.container}>
       <div className={styles.chat_layout}>
         {/* Lado esquerdo - Lista de usuários */}
-       
-  <UserList
-    onSelectUser={(user) => setDestinatario(user)}
-    userIdLogado={userIdLogado}
-  />
 
+        <UserList
+          onSelectUser={(user) => setDestinatario(user)}
+          userIdLogado={userIdLogado}
+        />
 
         {/* Lado direito - Conteúdo do chat */}
         <div className={styles.chat_content}>
           <div className={styles.chat_header}>
-          <span className={styles.userName}>
-  {destinatario?.name || (
-    <dotlottie-player
-      src="https://lottie.host/811e68f3-aa82-4b5d-80dd-e966baba4d2c/N2QYlHQHRw.lottie"
-      background="transparent"
-      speed="1"
-      style={{ width: "300px", height: "300px",display:"flex" }}
-      loop
-      autoplay
-    ></dotlottie-player>
-  )}
-</span>
-
+            <span className={styles.userName}>
+              {destinatario?.name || (
+                <dotlottie-player
+                  src="https://lottie.host/811e68f3-aa82-4b5d-80dd-e966baba4d2c/N2QYlHQHRw.lottie"
+                  background="transparent"
+                  speed="1"
+                  style={{ width: "300px", height: "300px", display: "flex" }}
+                  loop
+                  autoplay
+                ></dotlottie-player>
+              )}
+            </span>
 
             <div className={styles.headerActions}>
               <label className={styles.uploadButton}>
@@ -471,7 +545,14 @@ useEffect(() => {
                           </a>
                         </div>
                       ) : (
-                        <p>{message.conteudo}</p>
+                        <p className={styles.iconEcheckList}>
+                          {message.conteudo}
+                          {message.userId === userId && (
+                            <span className={styles.statusIcon}>
+                              {renderStatusIcon(message.status)}
+                            </span>
+                          )}
+                        </p>
                       )}
                     </div>
                   )}
