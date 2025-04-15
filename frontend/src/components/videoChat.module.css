@@ -1,100 +1,206 @@
-/* Container principal da videochamada */
+/* videoChat.module.css */
+
 .video_chat {
   position: relative;
-  width: 100%;
-  height: 100%;
+  z-index: 10;
 }
 
-/* Overlay da videochamada */
-.video_overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-
-/* Vídeo remoto (ocupa a tela) */
-.remote_video {
-  width: 50%;
-  max-width: 800px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px #0ff;
-  object-fit: cover;
-}
-
-/* Vídeo local em miniatura (canto inferior direito) */
-.local_video {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 180px;
-  height: 120px;
-  border-radius: 8px;
-  border: 2px solid #0ff;
-  object-fit: cover;
-  z-index: 10000;
-}
-
-/* Responsividade */
-@media (max-width: 600px) {
-  .remote_video {
-    width: 90%;
-  }
-
-  .local_video {
-    width: 120px;
-    height: 80px;
-    bottom: 10px;
-    right: 10px;
-  }
-
-  .video_controls {
-    bottom: 10px;
-    gap: 10px;
-  }
-
-  .control_btn {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-}
-
-/* Botões de controle */
-.control_btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  color: white;
-  font-size: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.video_call_icon {
+  font-size: 2rem;
+  color: #00ffcc;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
-.control_btn:hover {
-  background: rgba(0, 255, 255, 0.2);
+.video_call_icon:hover {
   transform: scale(1.1);
 }
 
-/* Botão de desligar destacado */
-.control_btn svg {
-  pointer-events: none;
+.incoming_call {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background: #1e1e1e;
+  color: #fff;
+  border: 1px solid #00ffcc;
+  border-radius: 12px;
+  padding: 1rem;
+  z-index: 1000;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.control_btn:nth-child(2) {
-  background: red;
+.incoming_call button {
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
   border: none;
+  background-color: #00ffcc;
+  color: #000;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
-.control_btn:nth-child(2):hover {
-  background: #ff3333;
+.incoming_call .hang-up-btn {
+  background-color: #ff4d4d;
+  color: #fff;
 }
+
+.incoming_call button:hover {
+  opacity: 0.9;
+}
+
+.video_overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  height: 240px;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid #00ffcc;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 999;
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.video_overlay.fullscreen {
+  top: 0;
+  right: 0;
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+}
+
+.remote_video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.local_video {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 100px;
+  height: 75px;
+  border: 2px solid #00ffcc;
+  border-radius: 8px;
+  object-fit: cover;
+  z-index: 1001;
+  background: #000;
+}
+
+.video_controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #111;
+  padding: 0.5rem;
+  border-top: 1px solid #00ffcc;
+  z-index: 1002;
+}
+
+.control_btn {
+  background: #222;
+  color: #00ffcc;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.3s ease;
+}
+
+.control_btn:hover {
+  background: #00ffcc;
+  color: #000;
+}
+
+
+.menu_toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1003;
+}
+
+.menu_btn {
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #00ffcc;
+  font-size: 1.5rem;
+  padding: 0.4rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.menu_btn:hover {
+  background: rgba(0, 255, 204, 0.2);
+}
+
+.options_menu {
+  position: absolute;
+  top: 2.5rem;
+  left: 0;
+  background: #1e1e1e;
+  border: 1px solid #00ffcc;
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  z-index: 1004;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+  min-width: 120px;
+}
+
+.options_menu button {
+  background: transparent;
+  color: #fff;
+  border: none;
+  padding: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s ease;
+}
+
+.options_menu button:hover {
+  background: rgba(0, 255, 204, 0.1);
+}
+
+.options_menu .hangup_btn {
+  color: #ff4d4d;
+}
+
+/* Fade e Slide juntos */
+.fade-slide-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-slide-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-slide-exit {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-slide-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+

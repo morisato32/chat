@@ -81,7 +81,7 @@ function Chat() {
     if (socket && userId) {
       socket.emit("registrarUsuario", userId);
     }
-  }, [socket, userId]);
+  }, [userId]);
 
   useEffect(() => {
     if (!socket || !userId || !destinatario?.id) return;
@@ -388,7 +388,7 @@ useEffect(() => {
 
               {file && <span className={styles.fileName}>{file.name}</span>}
 
-              <VideoChat userName={userName} />
+              <VideoChat userId={userIdLogado} selectedUserId={destinatario?.id} userName={userName}/>
             </div>
           </div>
 
