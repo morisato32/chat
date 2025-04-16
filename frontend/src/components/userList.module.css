@@ -46,3 +46,34 @@
   padding: 1rem;
   overflow-y: auto;
 }
+
+.user_list {
+  display: flex;
+  flex-direction: column;
+}
+
+.user_item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #333;
+}
+
+.status_dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 8px;
+}
+
+.online {
+  background-color: #00ff00; /* verde */
+}
+
+.offline {
+  background-color: #666; /* cinza escuro */
+}
+
+

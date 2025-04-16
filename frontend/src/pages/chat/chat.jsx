@@ -356,10 +356,14 @@ useEffect(() => {
       <div className={styles.chat_layout}>
         {/* Lado esquerdo - Lista de usuários */}
 
-        <UserList
-          onSelectUser={(user) => setDestinatario(user)}
-          userIdLogado={userIdLogado}
-        />
+        {userIdLogado && (
+  <UserList
+    onSelectUser={(user) => setDestinatario(user)}
+    userIdLogado={userIdLogado}
+    selectedUserId={destinatario?.id}
+  />
+)}
+
 
         {/* Lado direito - Conteúdo do chat */}
         <div className={styles.chat_content}>
