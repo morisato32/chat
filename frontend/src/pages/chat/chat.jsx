@@ -10,7 +10,7 @@ import {
   MdMoreVert,
   MdEmojiEmotions,
   MdCheck,
-  MdDoneAll
+  MdDoneAll,
 } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
@@ -23,7 +23,7 @@ import EmojiPicker from "../../components/EmojiPicker";
 
 import playNotificationSound from "../../components/notificacaoDaMensagem";
 
-
+import UserPanel from "../../components/userPainel"; // ajuste o caminho conforme seu projeto
 
 const socket = io("http://localhost:5000");
 
@@ -39,17 +39,31 @@ function Chat() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const [destinatario, setDestinatario] = useState(null);
-
-  
-
   const [userIdLogado, setUserIdLogado] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+ 
 
   useEffect(() => {
-    const dados = sessionStorage.getItem("user");
-    const storedUserId = JSON.parse(dados).id;
+    // Verifica se já existe no sessionStorage
+    let user = sessionStorage.getItem("user");
 
-    if (storedUserId) {
-      setUserIdLogado(storedUserId);
+    // Se não tiver no sessionStorage, tenta recuperar do localStorage
+    if (!user) {
+      user = localStorage.getItem("user");
+
+      if (user) {
+        sessionStorage.setItem("user", user); // Restaura para sessionStorage
+      }
+    }
+
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      console.log("Usuário carregado:", parsedUser); // 👈 veja se avatar aparece aqui
+      setCurrentUser(parsedUser);
+      setUserIdLogado(parsedUser.id);
+    } else {
+      // Redireciona para login se não tiver user
+      navigate("/");
     }
   }, []);
 
@@ -69,6 +83,25 @@ function Chat() {
   // Colocando [socket, userId, destinatario], você garante que o requestMessages será reenviado quando o usuário for selecionado.
 
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+
+  // Recuperar ao carregar o componente
+  // No Chat.jsx ou onde você controla o estado do destinatario:
+  useEffect(() => {
+    if (userIdLogado) {
+      const destinatarioSalvo = localStorage.getItem("destinatario");
+      if (destinatarioSalvo) {
+        setDestinatario(JSON.parse(destinatarioSalvo));
+      }
+    }
+  }, [userIdLogado]);
+
+  // 🧠 Dica extra
+  // Se você quiser manter localStorage sincronizado automaticamente com o estado React:
+  useEffect(() => {
+    if (destinatario) {
+      localStorage.setItem("destinatario", JSON.stringify(destinatario));
+    }
+  }, [destinatario]);
 
   const userId = user.id || null;
   const userName = user.name || "Usuário Desconhecido";
@@ -98,12 +131,14 @@ function Chat() {
     // Recebe nova mensagem em tempo real
     socket.on("receivePrivateMessage", (message) => {
       const isRelevant =
-        (message.userId === userId && message.destinatarioId === destinatario.id) ||
-        (message.userId === destinatario.id && message.destinatarioId === userId);
-    
+        (message.userId === userId &&
+          message.destinatarioId === destinatario.id) ||
+        (message.userId === destinatario.id &&
+          message.destinatarioId === userId);
+
       if (isRelevant) {
         setMessages((prevMessages) => [...prevMessages, message]);
-    
+
         // Marca como lida se a mensagem veio do outro usuário e ele está em conversa com você
         if (message.userId === destinatario.id) {
           socket.emit("marcarMensagemComoLida", {
@@ -112,13 +147,12 @@ function Chat() {
           });
         }
       }
-    
+
       // Toca som se a mensagem veio de outra pessoa
       if (message.userId !== userId) {
         playNotificationSound();
       }
     });
-    
 
     return () => {
       socket.off("loadMessages");
@@ -129,67 +163,66 @@ function Chat() {
   // status da mensagem
 
   // Quando abre a conversa com alguém, marca as mensagens como lidas
-useEffect(() => {
-  if (!destinatario?.id) return;
+  useEffect(() => {
+    if (!destinatario?.id) return;
 
-  socket.emit("marcar_como_lida", {
-    remetenteId: destinatario.id, // <- Quem enviou a mensagem (userId no banco)
-    destinatarioId: userId          // <- eu (o logado) estou lendo agora
-  });
+    socket.emit("marcar_como_lida", {
+      remetenteId: destinatario.id, // <- Quem enviou a mensagem (userId no banco)
+      destinatarioId: userId, // <- eu (o logado) estou lendo agora
+    });
 
-  socket.emit("entrouNaConversa", {
-    userId: userId,
-    conversandoComId: destinatario.id,
-  });
-  
+    socket.emit("entrouNaConversa", {
+      userId: userId,
+      conversandoComId: destinatario.id,
+    });
 
-  console.log("📤 Emitido 'marcar_como_lida' de:", userId, "para:", destinatario.id);
-}, [destinatario,userId]);
-
-// Quando o servidor responde com as mensagens marcadas como lidas
-useEffect(() => {
-  socket.on("mensagens_lidas", ({ de, mensagens }) => {
-    console.log("🔵 Mensagens lidas recebidas de:", de, mensagens);
-
-    setMessages((prevMessages) =>
-      prevMessages.map((msg) =>
-        msg.userId === userId &&
-        msg.destinatarioId === de &&
-        mensagens.some((m) => m.id === msg.id)
-          ? { ...msg, status: "LIDA" }
-          : msg
-      )
+    console.log(
+      "📤 Emitido 'marcar_como_lida' de:",
+      userId,
+      "para:",
+      destinatario.id
     );
-  });
+  }, [destinatario, userId]);
 
-  return () => {
-    socket.off("mensagens_lidas");
-  };
-}, [userId]);
+  // Quando o servidor responde com as mensagens marcadas como lidas
+  useEffect(() => {
+    socket.on("mensagens_lidas", ({ de, mensagens }) => {
+      console.log("🔵 Mensagens lidas recebidas de:", de, mensagens);
 
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.userId === userId &&
+          msg.destinatarioId === de &&
+          mensagens.some((m) => m.id === msg.id)
+            ? { ...msg, status: "LIDA" }
+            : msg
+        )
+      );
+    });
 
-
-
-  
+    return () => {
+      socket.off("mensagens_lidas");
+    };
+  }, [userId]);
 
   const renderStatusIcon = (status) => {
     switch (status) {
       case "ENVIADA":
         return (
           <span title="Enviada">
-            <MdCheck style={{ color: "#333" }}/>
+            <MdCheck style={{ color: "#333" }} />
           </span>
         );
       case "ENTREGUE":
         return (
           <span title="Entregue">
-            <MdDoneAll style={{ color: "#333" }}/>
+            <MdDoneAll style={{ color: "#333" }} />
           </span>
         );
       case "LIDA":
         return (
           <span title="Lida">
-            <MdDoneAll style={{color: "dodgerblue"}}/>
+            <MdDoneAll style={{ color: "dodgerblue" }} />
           </span>
         );
       default:
@@ -350,40 +383,50 @@ useEffect(() => {
     }
   };
   console.log("ID do usuário logado:", userIdLogado);
+  console.log("currentUser", currentUser);
 
   return (
     <div className={styles.container}>
       <div className={styles.chat_layout}>
         {/* Lado esquerdo - Lista de usuários */}
 
-        {userIdLogado && (
-  <UserList
-    onSelectUser={(user) => setDestinatario(user)}
-    userIdLogado={userIdLogado}
-    selectedUserId={destinatario?.id}
-  />
-)}
+        <>
+          {/* {currentUser && (
+        <>
+          <UserPanel
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+            socketRef={socketRef}
+          /> */}
 
+          {currentUser && (
+            <UserList
+              onSelectUser={(user) => {
+                localStorage.setItem("destinatario", JSON.stringify(user));
+                setDestinatario(user);
+              }}
+              userIdLogado={currentUser.id}
+              selectedUserId={destinatario?.id}
+              destinatario={destinatario}
+              currentUser={currentUser}
+              setCurrentUser={setCurrentUser}
+              
+            />
+          )}
+        </>
+
+        {/* <UserPanel currentUser={currentUser} onAvatarUpdated={handleAvatarUpdate} /> */}
 
         {/* Lado direito - Conteúdo do chat */}
         <div className={styles.chat_content}>
           <div className={styles.chat_header}>
             <span className={styles.userName}>
-              {destinatario?.name || (
-                <dotlottie-player
-                  src="https://lottie.host/811e68f3-aa82-4b5d-80dd-e966baba4d2c/N2QYlHQHRw.lottie"
-                  background="transparent"
-                  speed="1"
-                  style={{ width: "300px", height: "300px", display: "flex" }}
-                  loop
-                  autoplay
-                ></dotlottie-player>
-              )}
+              {destinatario?.name || "desconhecido"}
             </span>
 
             <div className={styles.headerActions}>
               <label className={styles.uploadButton}>
-                <MdFileUpload />
+                <MdFileUpload title="upload de arquivos" />
                 <input
                   type="file"
                   onChange={(e) => setFile(e.target.files[0])}
@@ -392,7 +435,11 @@ useEffect(() => {
 
               {file && <span className={styles.fileName}>{file.name}</span>}
 
-              <VideoChat userId={userIdLogado} selectedUserId={destinatario?.id} userName={userName}/>
+              <VideoChat
+                userId={userIdLogado}
+                selectedUserId={destinatario?.id}
+                userName={userName}
+              />
             </div>
           </div>
 

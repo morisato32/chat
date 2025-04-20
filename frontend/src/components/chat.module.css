@@ -430,7 +430,127 @@ input::placeholder {
   display: none;
 }
 
-/*responsividade */
+/*painel de usuario */
+.avatar_padrao {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.avatar_padrao:hover {
+  transform: scale(1.05);
+}
+
+.user_name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logout {
+  color: #f87171;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s ease-in-out, color 0.2s;
+}
+
+.logout:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ef4444;
+}
+
+/* Menu suspenso */
+.dropdown_menu {
+  position: absolute;
+  top: 55px;
+  left: 300px;
+  background-color: #2a2a2a;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 0;
+  width: 220px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+}
+
+.dropdown_menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown_menu li {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdown_menu li:hover {
+  background-color: #3a3a3a;
+}
+
+.dropdown_logout {
+  color: #f87171;
+}
+
+.avatar_padrao {
+  width: 40px; /* ou 48px/64px dependendo do design */
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #00ffff33; /* borda neon leve, opcional */
+  transition: transform 0.2s ease-in-out;
+}
+
+.avatar_padrao:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+.loggedUserInfo {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #222;
+  
+  gap: 10px;
+}
+
+.loggedUserAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #0ff; /* efeito neon opcional */
+}
+
+.loggedUserName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between; /* Para manter a lista no topo e o perfil no fim */
+}
+
+
+
+
+
+
+
 
 
 

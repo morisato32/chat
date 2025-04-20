@@ -237,7 +237,7 @@ const VideoChat = ({ userName,selectedUserId }) => {
           className={styles.video_call_icon}
           onClick={() => startCall(selectedUserId)}
         >
-          <MdVideoCall />
+          <MdVideoCall title="videochamada" />
         </div>
       )}
 
