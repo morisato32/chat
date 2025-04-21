@@ -27,12 +27,10 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
     if (!currentUser?.id) return;
     const fetchUsers = async () => {
       const response = await api.get("/users");
-      console.log("Usuários recebidos:", response.data);
       setUsers(response.data);
     };
     fetchUsers();
   }, [currentUser]);
-  
 
   useEffect(() => {
     if (!userIdLogado) return;
@@ -41,6 +39,7 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
       query: { userId: userIdLogado },
     });
 
+    // Atualiza lista de usuários online
     socketRef.current.on("online-users", (userIds) => {
       const initialState = {};
       userIds.forEach((id) => {
@@ -49,13 +48,18 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
       setOnlineUsers(initialState);
     });
 
-    // Atualiza avatar em tempo real para todos
-    socketRef.current.on("avatar-updated", ({ userId, AvatarUrl }) => {
+    // Atualiza avatar em tempo real
+    socketRef.current.on("avatarAtualizado", ({ userId, avatarUrl }) => {
       setUsers(prev =>
         prev.map(user =>
-          user.id === userId ? { ...user, avatar: AvatarUrl } : user
+          user.id === userId ? { ...user, avatar: avatarUrl } : user
         )
       );
+    });
+    
+    // Novo usuário adicionado
+    socketRef.current.on("novoUsuario", (usuario) => {
+      setUsers((prevUsuarios) => [...prevUsuarios, usuario]);
     });
 
     return () => {
@@ -94,14 +98,13 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
         ))}
 
       {/* Painel do usuário logado */}
-  <div className={styles.user_panel_container}>
-    <UserPanel
-      currentUser={currentUser}
-      setCurrentUser={setCurrentUser}
-      socket={socketRef.current}
-      
-    />
-  </div>
+      <div className={styles.user_panel_container}>
+        <UserPanel
+          currentUser={currentUser}
+          setCurrentUser={setCurrentUser}
+          socket={socketRef.current}
+        />
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ const ChangeAvatar = ({ userId, onClose, onAvatarUpdated }) => {
   const [file, setFile] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const [preview, setPreview] = useState("");
+  
 
 
   
@@ -38,27 +39,33 @@ const handleSubmit = async (e) => {
       if (file) {
         const formData = new FormData();
         formData.append("avatar", file);
-        formData.append("userId", userId); // Envia o userId no corpo da requisição
+        formData.append("userId", userId);
   
-        // Faz a requisição para upload de arquivo
         const response = await api.post("/users/avatar/upload", formData);
         avatarUrl = response.data.avatarUrl;
       } else if (imageUrl) {
         const response = await api.post("/users/avatar/url", {
-          userId, // Envia o userId no corpo da requisição
+          userId,
           avatarUrl: imageUrl,
         });
         avatarUrl = response.data.avatarUrl;
       }
   
       if (avatarUrl) {
-        onAvatarUpdated(avatarUrl); // Atualiza o avatar no componente pai
+        // 🔥 Atualiza o campo avatar no banco
+        await api.put("/user", {
+          id: userId,
+          avatar: avatarUrl,
+        });
+  
+        onAvatarUpdated(avatarUrl); // Atualiza no painel
         onClose(); // Fecha o modal
       }
     } catch (err) {
       console.error("Erro ao atualizar o avatar:", err);
     }
   };
+  
   
 
   return (

@@ -13,7 +13,7 @@ import styles from "../components/videoChat.module.css";
 
 const socket = io("http://localhost:5000");
 
-const VideoChat = ({ userName,selectedUserId }) => {
+const VideoChat = ({ userName, selectedUserId }) => {
   const [userId, setUserId] = useState(() => {
     const dados = sessionStorage.getItem("user");
     return dados ? JSON.parse(dados).id : null;
@@ -62,8 +62,12 @@ const VideoChat = ({ userName,selectedUserId }) => {
     });
 
     socket.on("offer", async (data) => {
+      console.log("📞 [OFFER RECEBIDO]");
+      console.log("➡️ De:", data.from);
+      console.log("👤 Nome do remetente:", data.userName);
+      console.log("📝 Oferta SDP:", data.offer);
       console.log("📞 Oferta recebida de:", data.from, "nome:", data.userName);
-      setIncomingCall(data);
+      setIncomingCall(data); // provavelmente mostra a notificação
     });
 
     socket.on("answer", async ({ answer }) => {
@@ -77,7 +81,10 @@ const VideoChat = ({ userName,selectedUserId }) => {
 
       try {
         if (peerConnection.current.signalingState !== "stable") {
-          console.warn("⚠️ Estado de sinalização instável:", peerConnection.current.signalingState);
+          console.warn(
+            "⚠️ Estado de sinalização instável:",
+            peerConnection.current.signalingState
+          );
         }
 
         await peerConnection.current.setRemoteDescription(
@@ -137,7 +144,9 @@ const VideoChat = ({ userName,selectedUserId }) => {
           to: target,
         });
       } else {
-        console.warn("⚠️ ICE candidate ignorado (target ou candidato inválido).");
+        console.warn(
+          "⚠️ ICE candidate ignorado (target ou candidato inválido)."
+        );
       }
     };
 
@@ -216,19 +225,59 @@ const VideoChat = ({ userName,selectedUserId }) => {
     }
 
     if (localVideoRef.current?.srcObject) {
-      localVideoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      localVideoRef.current.srcObject
+        .getTracks()
+        .forEach((track) => track.stop());
       localVideoRef.current.srcObject = null;
     }
 
     if (remoteVideoRef.current?.srcObject) {
-      remoteVideoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      remoteVideoRef.current.srcObject
+        .getTracks()
+        .forEach((track) => track.stop());
       remoteVideoRef.current.srcObject = null;
     }
 
     setIsCalling(false);
     setIncomingCall(null);
     targetUserIdRef.current = null;
+
+    if (targetUserIdRef.current) {
+      socket.emit("hang-up", { to: targetUserIdRef.current });
+    }
   };
+
+  socket.on("hang-up", () => {
+    console.log("📴 Chamada encerrada pelo outro usuário");
+    setIsCalling(false);
+    setIncomingCall(null);
+    targetUserIdRef.current = null;
+
+    // Encerrar vídeos
+    if (peerConnection.current) {
+      peerConnection.current.close();
+      peerConnection.current = null;
+    }
+
+    if (localVideoRef.current?.srcObject) {
+      localVideoRef.current.srcObject
+        .getTracks()
+        .forEach((track) => track.stop());
+      localVideoRef.current.srcObject = null;
+    }
+
+    if (remoteVideoRef.current?.srcObject) {
+      remoteVideoRef.current.srcObject
+        .getTracks()
+        .forEach((track) => track.stop());
+      remoteVideoRef.current.srcObject = null;
+    }
+
+    // Exibir mensagem na UI
+    alert("📴 A chamada foi encerrada pelo outro usuário.");
+  });
+
+  socket.off("hang-up");
 
   return (
     <div className={styles.video_chat}>
@@ -252,11 +301,24 @@ const VideoChat = ({ userName,selectedUserId }) => {
       )}
 
       <div
-        className={`${styles.video_overlay} ${isFullscreen ? styles.fullscreen : ""}`}
+        className={`${styles.video_overlay} ${
+          isFullscreen ? styles.fullscreen : ""
+        }`}
         style={{ display: isCalling ? "flex" : "none" }}
       >
-        <video className={styles.remote_video} autoPlay playsInline ref={remoteVideoRef} />
-        <video className={styles.local_video} autoPlay muted playsInline ref={localVideoRef} />
+        <video
+          className={styles.remote_video}
+          autoPlay
+          playsInline
+          ref={remoteVideoRef}
+        />
+        <video
+          className={styles.local_video}
+          autoPlay
+          muted
+          playsInline
+          ref={localVideoRef}
+        />
 
         <div className={styles.menu_toggle}>
           <button className={styles.menu_btn} onClick={toggleOptions}>
