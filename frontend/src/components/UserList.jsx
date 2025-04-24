@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../services/api";
-import styles from "../components/userList.module.css";
 import io from "socket.io-client";
+import styles from "../components/userList.module.css";
 import UserPanel from "../components/userPainel";
 
 function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
@@ -9,29 +9,31 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
   const [onlineUsers, setOnlineUsers] = useState({});
   const socketRef = useRef(null);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        if (!userIdLogado) return;
-        const response = await api.get("/users");
-        setUsers(response.data);
-      } catch (err) {
-        console.error("Erro ao buscar usuários", err);
-      }
-    };
-
-    fetchUsers();
-  }, [userIdLogado]);
-
-  useEffect(() => {
-    if (!currentUser?.id) return;
-    const fetchUsers = async () => {
+  // Buscar todos os usuários
+  const fetchUsers = async () => {
+    try {
       const response = await api.get("/users");
       setUsers(response.data);
-    };
-    fetchUsers();
+    } catch (err) {
+      console.error("Erro ao buscar usuários", err);
+    }
+  };
+
+  // Buscar ao logar
+  useEffect(() => {
+    if (userIdLogado) {
+      fetchUsers();
+    }
+  }, [userIdLogado]);
+
+  // Buscar ao atualizar o currentUser
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetchUsers();
+    }
   }, [currentUser]);
 
+  // Conexão socket e listeners
   useEffect(() => {
     if (!userIdLogado) return;
 
@@ -39,27 +41,24 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
       query: { userId: userIdLogado },
     });
 
-    // Atualiza lista de usuários online
     socketRef.current.on("online-users", (userIds) => {
-      const initialState = {};
+      const estadoOnline = {};
       userIds.forEach((id) => {
-        initialState[id] = true;
+        estadoOnline[id] = true;
       });
-      setOnlineUsers(initialState);
+      setOnlineUsers(estadoOnline);
     });
 
-    // Atualiza avatar em tempo real
     socketRef.current.on("avatarAtualizado", ({ userId, avatarUrl }) => {
-      setUsers(prev =>
-        prev.map(user =>
+      setUsers((prev) =>
+        prev.map((user) =>
           user.id === userId ? { ...user, avatar: avatarUrl } : user
         )
       );
     });
-    
-    // Novo usuário adicionado
-    socketRef.current.on("novoUsuario", (usuario) => {
-      setUsers((prevUsuarios) => [...prevUsuarios, usuario]);
+
+    socketRef.current.on("novoUsuario", (novoUser) => {
+      setUsers((prev) => [...prev, novoUser]);
     });
 
     return () => {
@@ -67,6 +66,7 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
     };
   }, [userIdLogado]);
 
+  // Render
   return (
     <div className={styles.user_list}>
       {users

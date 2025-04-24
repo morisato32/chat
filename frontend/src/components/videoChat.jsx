@@ -23,23 +23,17 @@ const VideoChat = ({ userName, selectedUserId }) => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isCalling, setIsCalling] = useState(false);
   const [incomingCall, setIncomingCall] = useState(null);
-  const targetUserIdRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const peerConnection = useRef(null);
-
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);
+  const targetUserIdRef = useRef(null);
+  const ringAudioRef = useRef(null);
 
   const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
   const toggleOptions = () => setShowOptions((prev) => !prev);
-
-  const validateCallState = (step) => {
-    console.log(`[DEBUG] [${step}] userId:`, userId);
-    console.log(`[DEBUG] [${step}] targetUserId:`, targetUserIdRef.current);
-    console.log(`[DEBUG] [${step}] peerConnection:`, peerConnection.current);
-  };
 
   const toggleMute = () => {
     const stream = localVideoRef.current?.srcObject;
@@ -49,42 +43,36 @@ const VideoChat = ({ userName, selectedUserId }) => {
     }
   };
 
+  const validateCallState = (step) => {
+    console.log(`[DEBUG] [${step}] userId:`, userId);
+    console.log(`[DEBUG] [${step}] targetUserId:`, targetUserIdRef.current);
+    console.log(`[DEBUG] [${step}] peerConnection:`, peerConnection.current);
+  };
+
   useEffect(() => {
     if (!userId) return;
 
     socket.emit("register", userId);
 
-    socket.on("registered", (data) => {
-      if (data.userId === userId) {
-        setIsRegistered(true);
-        console.log("✅ Usuário registrado:", data);
-      }
-    });
+    // socket.on("registered", (data) => {
+    //   if (data.userId === userId) {
+    //     setIsRegistered(true);
+    //     console.log("✅ Usuário registrado:", data);
+    //   }
+    // });
 
-    socket.on("offer", async (data) => {
-      console.log("📞 [OFFER RECEBIDO]");
-      console.log("➡️ De:", data.from);
-      console.log("👤 Nome do remetente:", data.userName);
-      console.log("📝 Oferta SDP:", data.offer);
-      console.log("📞 Oferta recebida de:", data.from, "nome:", data.userName);
-      setIncomingCall(data); // provavelmente mostra a notificação
+    socket.on("offer", (data) => {
+      console.log("📞 [OFFER RECEBIDO]", data);
+      setIncomingCall(data);
     });
 
     socket.on("answer", async ({ answer }) => {
-      console.log("✅ Resposta recebida");
       validateCallState("RECEIVED_ANSWER");
-
-      if (!peerConnection.current) {
-        console.error("❌ peerConnection não definida.");
-        return;
-      }
+      if (!peerConnection.current) return;
 
       try {
         if (peerConnection.current.signalingState !== "stable") {
-          console.warn(
-            "⚠️ Estado de sinalização instável:",
-            peerConnection.current.signalingState
-          );
+          console.warn("⚠️ Estado de sinalização instável.");
         }
 
         await peerConnection.current.setRemoteDescription(
@@ -105,13 +93,29 @@ const VideoChat = ({ userName, selectedUserId }) => {
       }
     });
 
+    socket.on("hang-up", () => {
+      console.log("📴 Chamada encerrada pelo outro usuário");
+      endCall();
+      alert("📴 A chamada foi encerrada pelo outro usuário.");
+    });
+
     return () => {
       socket.off("registered");
       socket.off("offer");
       socket.off("answer");
       socket.off("ice-candidate");
+      socket.off("hang-up");
     };
   }, [userId]);
+
+  useEffect(() => {
+    if (incomingCall) {
+      ringAudioRef.current?.play().catch(console.error);
+    } else {
+      ringAudioRef.current?.pause();
+      ringAudioRef.current.currentTime = 0;
+    }
+  }, [incomingCall]);
 
   const getLocalMediaStream = async () => {
     try {
@@ -129,7 +133,6 @@ const VideoChat = ({ userName, selectedUserId }) => {
     const pc = new RTCPeerConnection();
 
     pc.ontrack = (event) => {
-      console.log("🎥 Track recebida", event.streams[0]);
       if (remoteVideoRef.current && event.streams[0]) {
         remoteVideoRef.current.srcObject = event.streams[0];
       }
@@ -138,15 +141,10 @@ const VideoChat = ({ userName, selectedUserId }) => {
     pc.onicecandidate = (event) => {
       const target = targetUserIdRef.current;
       if (event.candidate && target) {
-        console.log("📤 Enviando ICE para:", target);
         socket.emit("ice-candidate", {
           candidate: event.candidate,
           to: target,
         });
-      } else {
-        console.warn(
-          "⚠️ ICE candidate ignorado (target ou candidato inválido)."
-        );
       }
     };
 
@@ -156,11 +154,27 @@ const VideoChat = ({ userName, selectedUserId }) => {
   const startCall = async (toUserId) => {
     if (!isRegistered || !userId) return;
 
+    peerConnection.current = createPeerConnection();
+
+    if (!peerConnection.current) {
+      console.error("[❌] Falha ao criar peerConnection");
+      return;
+    }
+
+   
+
+    // ✅ Garante que o target está definido corretamente
+    if (!toUserId) {
+      console.warn("[❌] Nenhum destinatário especificado para a chamada.");
+      return;
+    }
+
     targetUserIdRef.current = toUserId;
     validateCallState("START_CALL");
 
-    peerConnection.current = createPeerConnection();
+   
 
+    // Obter o stream de mídia local
     const stream = await getLocalMediaStream();
 
     if (localVideoRef.current) {
@@ -182,10 +196,14 @@ const VideoChat = ({ userName, selectedUserId }) => {
     });
 
     setIsCalling(true);
+    console.log("[📞] Chamada iniciada com:", toUserId);
   };
 
   const acceptCall = async () => {
     if (!incomingCall) return;
+
+    ringAudioRef.current?.pause();
+    ringAudioRef.current.currentTime = 0;
 
     targetUserIdRef.current = incomingCall.from;
     validateCallState("ACCEPT_CALL");
@@ -193,14 +211,11 @@ const VideoChat = ({ userName, selectedUserId }) => {
     peerConnection.current = createPeerConnection();
 
     const stream = await getLocalMediaStream();
+    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
-    }
-
-    stream.getTracks().forEach((track) => {
-      peerConnection.current.addTrack(track, stream);
-    });
+    stream
+      .getTracks()
+      .forEach((track) => peerConnection.current.addTrack(track, stream));
 
     await peerConnection.current.setRemoteDescription(
       new RTCSessionDescription(incomingCall.offer)
@@ -218,69 +233,34 @@ const VideoChat = ({ userName, selectedUserId }) => {
     setIncomingCall(null);
   };
 
-  const hangUp = () => {
-    if (peerConnection.current) {
-      peerConnection.current.close();
-      peerConnection.current = null;
-    }
+  const endCall = () => {
+    peerConnection.current?.close();
+    peerConnection.current = null;
 
-    if (localVideoRef.current?.srcObject) {
-      localVideoRef.current.srcObject
-        .getTracks()
-        .forEach((track) => track.stop());
-      localVideoRef.current.srcObject = null;
-    }
+    [localVideoRef, remoteVideoRef].forEach((ref) => {
+      ref.current?.srcObject?.getTracks().forEach((track) => track.stop());
+      if (ref.current) ref.current.srcObject = null;
+    });
 
-    if (remoteVideoRef.current?.srcObject) {
-      remoteVideoRef.current.srcObject
-        .getTracks()
-        .forEach((track) => track.stop());
-      remoteVideoRef.current.srcObject = null;
-    }
+    ringAudioRef.current?.pause();
+    ringAudioRef.current.currentTime = 0;
 
     setIsCalling(false);
     setIncomingCall(null);
     targetUserIdRef.current = null;
+  };
 
+  const hangUp = () => {
     if (targetUserIdRef.current) {
       socket.emit("hang-up", { to: targetUserIdRef.current });
     }
+    endCall();
   };
-
-  socket.on("hang-up", () => {
-    console.log("📴 Chamada encerrada pelo outro usuário");
-    setIsCalling(false);
-    setIncomingCall(null);
-    targetUserIdRef.current = null;
-
-    // Encerrar vídeos
-    if (peerConnection.current) {
-      peerConnection.current.close();
-      peerConnection.current = null;
-    }
-
-    if (localVideoRef.current?.srcObject) {
-      localVideoRef.current.srcObject
-        .getTracks()
-        .forEach((track) => track.stop());
-      localVideoRef.current.srcObject = null;
-    }
-
-    if (remoteVideoRef.current?.srcObject) {
-      remoteVideoRef.current.srcObject
-        .getTracks()
-        .forEach((track) => track.stop());
-      remoteVideoRef.current.srcObject = null;
-    }
-
-    // Exibir mensagem na UI
-    alert("📴 A chamada foi encerrada pelo outro usuário.");
-  });
-
-  socket.off("hang-up");
 
   return (
     <div className={styles.video_chat}>
+      <audio ref={ringAudioRef} src="/sound/chamada.wav" loop />
+
       {!isCalling && !incomingCall && (
         <div
           className={styles.video_call_icon}

@@ -42,8 +42,7 @@ function Chat() {
   const [userIdLogado, setUserIdLogado] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
 
-  const socketRef = useRef(socket);  // Usando useRef para manter a referência do socket
- 
+  const socketRef = useRef(socket); // Usando useRef para manter a referência do socket
 
   useEffect(() => {
     // Verifica se já existe no sessionStorage
@@ -114,73 +113,100 @@ function Chat() {
 
   useEffect(() => {
     if (socket && userId) {
-      socket.emit("registrarUsuario", userId);
+      socket.emit("register", userId);
     }
   }, [userId]);
 
-  useEffect(() => {
-    if (!socket || !userId || !destinatario?.id) return;
-  
-    socketRef.current = socket; // Garante que a referência seja a mais recente
+  const destinatarioRef = useRef(null);
 
-    console.log("destinatario?.id:", destinatario?.id);
+useEffect(() => {
+  destinatarioRef.current = destinatario;
+}, [destinatario]);
 
-  
-    // 🔄 Solicita mensagens antigas da conversa atual
-    socket.emit("requestMessages", {
-      fromUserId: userId,
-      toUserId: destinatario.id,
-    });
-  
-    // 📥 Handler para carregar mensagens antigas
-    const handleLoadMessages = (messages) => {
-      setMessages(messages);
-    };
-  
-    // 📩 Handler para mensagens recebidas em tempo real
-    const handleReceiveMessage = (message) => {
-      console.log("📩 Mensagem recebida (receivePrivateMessage):", message);
-  
-      const isRelevant =
-        (message.userId === userId && message.destinatarioId === destinatario.id) ||
-        (message.userId === destinatario.id && message.destinatarioId === userId);
-  
-        console.log("Mensagem relevante?", isRelevant,message); // Verifica se a mensagem passou no filtro
-      if (isRelevant) {
-        setMessages((prevMessages) => [...prevMessages, message]);
-        console.log("✅ Mensagem adicionada:", message);
-      }
-  
-      // 🔊 Notificação sonora se for do outro usuário
-      if (message.userId !== userId) {
+
+ 
+
+useEffect(() => {
+  if (!socket || !userId) return;
+
+  socketRef.current = socket;
+
+  const handleReceiveMessage = (message) => {
+    console.log("📩 Mensagem recebida (global):", message);
+
+    const destinatarioAtual = destinatarioRef.current;
+
+    const isMensagemParaMim = message.destinatarioId === userId;
+    const isChatAtivo = destinatarioAtual?.id === message.userId;
+
+    if (isMensagemParaMim) {
+      if (isChatAtivo) {
+        setMessages((prev) => {
+          const exists = prev.some((m) => m.id === message.id);
+          return exists ? prev : [...prev, message];
+        });
+
+        console.log("✅ Mensagem adicionada ao chat ativo:", message);
         playNotificationSound();
-      }
-  
-      // ✅ Marca como lida se veio do destinatário atual
-      if (message.userId === destinatario.id) {
+
+        console.log("📘 Marcar como lida:", message.id);
         socket.emit("marcarMensagemComoLida", {
           mensagemId: message.id,
           usuarioId: userId,
         });
+      } else {
+        console.log("🔕 Mensagem recebida mas chat não está ativo:", message);
+        // Aqui você pode notificar na lista ou salvar como não lida
       }
-    };
-  
-    // ⏬ Subscrição dos eventos
-    socket.on("loadMessages", handleLoadMessages);
-    socket.on("receivePrivateMessage", handleReceiveMessage);
-  
-    // 🧹 Cleanup ao desmontar
-    return () => {
-      socket.off("loadMessages", handleLoadMessages);
-      socket.off("receivePrivateMessage", handleReceiveMessage);
-    };
-  }, [userId, destinatario, socket]);
+    } else if (message.userId === userId && message.destinatarioId === destinatarioAtual?.id) {
+      // O usuário está vendo o próprio envio
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === message.id);
+        return exists ? prev : [...prev, message];
+      });
+
+      console.log("✅ Mensagem enviada por mim adicionada:", message);
+    } else {
+      console.log("📨 Mensagem ignorada (não relevante):", message);
+    }
+  };
+
+  // ✅ Subscrição global
+  socket.on("receivePrivateMessage", handleReceiveMessage);
+
+  // 🧹 Cleanup na desmontagem
+  return () => {
+    socket.off("receivePrivateMessage", handleReceiveMessage);
+  };
+}, [userId]);
+
 
   useEffect(() => {
-    console.log("🧾 Todas mensagens:", messages);
-  }, [messages]);
+    if (!socketRef.current || !userId || !destinatario?.id) return;
+  
+    console.log("📥 Carregando histórico com:", destinatario.id);
+  
+    socketRef.current.emit("requestMessages", {
+      fromUserId: userId,
+      toUserId: destinatario.id,
+    });
+  
+    const handleLoadMessages = (messages) => {
+      setMessages(messages);
+    };
+  
+    socketRef.current.on("loadMessages", handleLoadMessages);
+  
+    return () => {
+      socketRef.current.off("loadMessages", handleLoadMessages);
+    };
+  }, [userId, destinatario]);
   
   
+
+  // useEffect(() => {
+  //   console.log("🧾 Todas mensagens:", messages);
+  // }, [messages]);
 
   // status da mensagem
 
@@ -266,23 +292,16 @@ function Chat() {
     }
 
     if (newMessage.trim()) {
-      console.log("Enviando mensagem para:", destinatario?.id);
+      console.log("Enviando mensagem para:", destinatario.id);
 
       socket.emit("sendPrivateMessage", {
-        conteudo: newMessage,
+        conteudo: newMessage.trim(), // já tratada
         fromUserId: userId,
-        toUserId: destinatario?.id,
+        toUserId: destinatario.id,
         tipoMidia: "texto",
       });
-      setNewMessage("");
+      setNewMessage(""); // limpa depois do emit
     }
-
-    console.log("Emitindo sendPrivateMessage:", {
-      conteudo: newMessage,
-      fromUserId: userId,
-      toUserId: destinatario.id,
-      tipoMidia: "texto",
-    });
   };
 
   const uploadFile = async (file, fileName, tipoMidia) => {
@@ -365,7 +384,7 @@ function Chat() {
       const response = await api.put(`/messages/update/${messageId}`, {
         novoConteudo: newText, // Envia o novo texto para o backend // ✅ Agora enviamos "novoConteudo", que o backend espera
       });
-      console.log('novaMensagem:',response);
+      console.log("novaMensagem:", response);
 
       if (response.status === 200) {
         // Atualiza o estado das mensagens localmente após o sucesso
@@ -432,7 +451,6 @@ function Chat() {
               destinatario={destinatario}
               currentUser={currentUser}
               setCurrentUser={setCurrentUser}
-              
             />
           )}
         </>
@@ -467,21 +485,16 @@ function Chat() {
 
           <ul className={styles.messages}>
             {messages
-             .filter((message) => {
-              console.log("📨 Filtro de mensagens:", {
-                userId,
-                destinatarioId: destinatario?.id,
-                msgUserId: message.userId,
-                msgDestinatarioId: message.destinatarioId
-              });
-        
-              return (
-                (message.userId === userId &&
-                  message.destinatarioId === destinatario?.id) ||
-                (message.userId === destinatario?.id &&
-                  message.destinatarioId === userId)
-              );
-            })
+              .filter((message) => {
+               
+
+                return (
+                  (message.userId === userId &&
+                    message.destinatarioId === destinatario?.id) ||
+                  (message.userId === destinatario?.id &&
+                    message.destinatarioId === userId)
+                );
+              })
               .map((message, index) => (
                 <li
                   key={message.id}
