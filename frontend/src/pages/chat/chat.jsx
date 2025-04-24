@@ -126,60 +126,53 @@ useEffect(() => {
 
  
 
-useEffect(() => {
-  if (!socket || !userId) return;
-
-  socketRef.current = socket;
-
-  const handleReceiveMessage = (message) => {
-    console.log("📩 Mensagem recebida (global):", message);
-
-    const destinatarioAtual = destinatarioRef.current;
-
-    const isMensagemParaMim = message.destinatarioId === userId;
-    const isChatAtivo = destinatarioAtual?.id === message.userId;
-
-    if (isMensagemParaMim) {
-      if (isChatAtivo) {
+  useEffect(() => {
+    if (!socket || !userId) return;
+  
+    socketRef.current = socket;
+  
+    const handleReceiveMessage = (message) => {
+      console.log("📩 Mensagem recebida (global):", message);
+  
+      const destinatarioAtual = destinatarioRef.current;
+  
+      const isRelevant =
+        (message.userId === userId && message.destinatarioId === destinatarioAtual?.id) ||
+        (message.userId === destinatarioAtual?.id && message.destinatarioId === userId);
+  
+      if (isRelevant) {
         setMessages((prev) => {
           const exists = prev.some((m) => m.id === message.id);
           return exists ? prev : [...prev, message];
         });
-
+        
         console.log("✅ Mensagem adicionada ao chat ativo:", message);
-        playNotificationSound();
+  
+        if (message.userId !== userId) {
+          playNotificationSound();
+        }
+  
+        if (message.userId === destinatarioAtual?.id) {
+          console.log("📘 Marcar como lida:", message.id);
 
-        console.log("📘 Marcar como lida:", message.id);
-        socket.emit("marcarMensagemComoLida", {
-          mensagemId: message.id,
-          usuarioId: userId,
-        });
+          socket.emit("marcarMensagemComoLida", {
+            mensagemId: message.id,
+            usuarioId: userId,
+          });
+        }
       } else {
-        console.log("🔕 Mensagem recebida mas chat não está ativo:", message);
-        // Aqui você pode notificar na lista ou salvar como não lida
+        console.log("📨 Mensagem recebida mas ignorada (chat inativo):", message);
       }
-    } else if (message.userId === userId && message.destinatarioId === destinatarioAtual?.id) {
-      // O usuário está vendo o próprio envio
-      setMessages((prev) => {
-        const exists = prev.some((m) => m.id === message.id);
-        return exists ? prev : [...prev, message];
-      });
-
-      console.log("✅ Mensagem enviada por mim adicionada:", message);
-    } else {
-      console.log("📨 Mensagem ignorada (não relevante):", message);
-    }
-  };
-
-  // ✅ Subscrição global
-  socket.on("receivePrivateMessage", handleReceiveMessage);
-
-  // 🧹 Cleanup na desmontagem
-  return () => {
-    socket.off("receivePrivateMessage", handleReceiveMessage);
-  };
-}, [userId]);
-
+    };
+  
+    // ✅ Subscrição global
+    socket.on("receivePrivateMessage", handleReceiveMessage);
+  
+    // 🧹 Cleanup na desmontagem
+    return () => {
+      socket.off("receivePrivateMessage", handleReceiveMessage);
+    };
+  }, [userId]);
 
   useEffect(() => {
     if (!socketRef.current || !userId || !destinatario?.id) return;
