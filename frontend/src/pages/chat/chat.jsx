@@ -111,11 +111,19 @@ function Chat() {
     navigate("/");
   }
 
+// ✅ No frontend:
+// Ao conectar ou reconectar, o cliente deve SEMPRE reenviar o register:
   useEffect(() => {
     if (socket && userId) {
       socket.emit("register", userId);
+  
+      socket.on("connect", () => {
+        console.log("🔁 Reemitindo register após reconexão");
+        socket.emit("register", userId);
+      });
     }
-  }, [userId]);
+  }, [socket, userId]);
+  
 
   const destinatarioRef = useRef(null);
 
@@ -124,55 +132,79 @@ useEffect(() => {
 }, [destinatario]);
 
 
+
+// 💡 Explicando a lógica:
+// message.destinatarioId === userId: a mensagem é para mim.
+
+// message.userId !== userId: eu não sou quem enviou (ou seja, recebi).
+
+// Isso evita tocar o som por mensagens enviadas por mim (até mesmo em outra aba).
+
  
 
-  useEffect(() => {
-    if (!socket || !userId) return;
-  
-    socketRef.current = socket;
-  
-    const handleReceiveMessage = (message) => {
-      console.log("📩 Mensagem recebida (global):", message);
-  
-      const destinatarioAtual = destinatarioRef.current;
-  
-      const isRelevant =
-        (message.userId === userId && message.destinatarioId === destinatarioAtual?.id) ||
-        (message.userId === destinatarioAtual?.id && message.destinatarioId === userId);
-  
-      if (isRelevant) {
-        setMessages((prev) => {
-          const exists = prev.some((m) => m.id === message.id);
-          return exists ? prev : [...prev, message];
-        });
-        
-        console.log("✅ Mensagem adicionada ao chat ativo:", message);
-  
-        if (message.userId !== userId) {
-          playNotificationSound();
-        }
-  
-        if (message.userId === destinatarioAtual?.id) {
-          console.log("📘 Marcar como lida:", message.id);
+useEffect(() => {
+  if (!socket || !userId) return;
 
-          socket.emit("marcarMensagemComoLida", {
-            mensagemId: message.id,
-            usuarioId: userId,
-          });
-        }
-      } else {
-        console.log("📨 Mensagem recebida mas ignorada (chat inativo):", message);
+  // Salva a referência atual do socket
+  socketRef.current = socket;
+
+  const reemitRegister = () => {
+    console.log("🔁 (re)Registrando socket com userId:", userId);
+    socket.emit("register", userId);
+  };
+
+  // Emitir o "register" inicial
+  reemitRegister();
+
+  // Reconexão
+  socket.on("connect", reemitRegister);
+
+  // Listener global da mensagem
+  const handleReceiveMessage = (message) => {
+    console.log("📩 Mensagem recebida (global):", message);
+
+    const destinatarioAtual = destinatarioRef.current;
+
+    const isRelevant =
+      (message.userId === userId && message.destinatarioId === destinatarioAtual?.id) ||
+      (message.userId === destinatarioAtual?.id && message.destinatarioId === userId);
+
+    if (message.userId !== userId) {
+      playNotificationSound();
+    }
+
+    if (isRelevant) {
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === message.id);
+        return exists ? prev : [...prev, message];
+      });
+
+      console.log("✅ Mensagem adicionada ao chat ativo:", message);
+
+      if (message.userId === destinatarioAtual?.id) {
+        console.log("📘 Marcar como lida:", message.id);
+
+        socket.emit("marcarMensagemComoLida", {
+          mensagemId: message.id,
+          usuarioId: userId,
+        });
       }
-    };
-  
-    // ✅ Subscrição global
-    socket.on("receivePrivateMessage", handleReceiveMessage);
-  
-    // 🧹 Cleanup na desmontagem
-    return () => {
-      socket.off("receivePrivateMessage", handleReceiveMessage);
-    };
-  }, [userId]);
+    } else {
+      console.log("📨 Mensagem recebida mas ignorada (chat inativo):", message);
+    }
+  };
+
+  // Sempre garantir que esse listener está ativo
+  socket.on("receivePrivateMessage", handleReceiveMessage);
+
+  return () => {
+    // Limpeza para evitar múltiplos listeners duplicados
+    socket.off("connect", reemitRegister);
+    socket.off("receivePrivateMessage", handleReceiveMessage);
+  };
+}, [userId]);
+
+
 
   useEffect(() => {
     if (!socketRef.current || !userId || !destinatario?.id) return;
@@ -275,27 +307,46 @@ useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+
+
+  // 🧠 Problema provável: socket perde conexão ou muda de referência, mas você continua tentando emitir usando a antiga.
+// 🔧 Solução: garantir que está emitindo via socketRef.current, que acompanha a referência mais atual, mesmo após reconexão.
+
   const sendMessage = async (e) => {
     e.preventDefault();
-
+  
+    if (!destinatario?.id || !userId) {
+      console.warn("⚠️ Envio cancelado: destinatário ou usuário indefinido.");
+      return;
+    }
+  
+    const socketAtual = socketRef.current;
+  
+    if (!socketAtual || !socketAtual.connected) {
+      console.error("❌ Socket desconectado. Mensagem não enviada.");
+      return;
+    }
+  
     if (file) {
       await uploadFile(file, file.name, getFileType(file.type));
       setFile(null);
       return;
     }
-
+  
     if (newMessage.trim()) {
-      console.log("Enviando mensagem para:", destinatario.id);
-
-      socket.emit("sendPrivateMessage", {
-        conteudo: newMessage.trim(), // já tratada
+      console.log("📤 Enviando mensagem para:", destinatario.id);
+  
+      socketAtual.emit("sendPrivateMessage", {
+        conteudo: newMessage.trim(),
         fromUserId: userId,
         toUserId: destinatario.id,
         tipoMidia: "texto",
       });
-      setNewMessage(""); // limpa depois do emit
+  
+      setNewMessage("");
     }
   };
+  
 
   const uploadFile = async (file, fileName, tipoMidia) => {
     const formData = new FormData();

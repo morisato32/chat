@@ -35,6 +35,17 @@ const VideoChat = ({ userName, selectedUserId }) => {
   const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
   const toggleOptions = () => setShowOptions((prev) => !prev);
 
+  const iceServers = {
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:19302" },
+      { urls: "stun:stun3.l.google.com:19302" },
+      { urls: "stun:stun4.l.google.com:19302" },
+    ],
+  };
+  
+
   const toggleMute = () => {
     const stream = localVideoRef.current?.srcObject;
     if (stream) {
@@ -54,12 +65,12 @@ const VideoChat = ({ userName, selectedUserId }) => {
 
     socket.emit("register", userId);
 
-    // socket.on("registered", (data) => {
-    //   if (data.userId === userId) {
-    //     setIsRegistered(true);
-    //     console.log("✅ Usuário registrado:", data);
-    //   }
-    // });
+    socket.on("registered", (data) => {
+      if (data.userId === userId) {
+        setIsRegistered(true);
+        console.log("✅ Usuário registrado:", data);
+      }
+    });
 
     socket.on("offer", (data) => {
       console.log("📞 [OFFER RECEBIDO]", data);
@@ -130,110 +141,139 @@ const VideoChat = ({ userName, selectedUserId }) => {
   };
 
   const createPeerConnection = () => {
-    const pc = new RTCPeerConnection();
-
-    pc.ontrack = (event) => {
-      if (remoteVideoRef.current && event.streams[0]) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-      }
-    };
-
+    console.log("[DEBUG] Criando nova RTCPeerConnection...");
+    const pc = new RTCPeerConnection(iceServers);
+  
+    // Adicione handlers e retorne
     pc.onicecandidate = (event) => {
-      const target = targetUserIdRef.current;
-      if (event.candidate && target) {
+      if (event.candidate) {
+        console.log("[ICE] Candidato local:", event.candidate);
         socket.emit("ice-candidate", {
+          to: targetUserIdRef.current,
+          from: userId,
           candidate: event.candidate,
-          to: target,
         });
       }
     };
-
+  
+    pc.ontrack = (event) => {
+      console.log("[TRACK] Recebendo track remota");
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = event.streams[0];
+      }
+    };
+  
     return pc;
   };
+  
 
   const startCall = async (toUserId) => {
     if (!isRegistered || !userId) return;
-
-    peerConnection.current = createPeerConnection();
-
-    if (!peerConnection.current) {
-      console.error("[❌] Falha ao criar peerConnection");
+  
+    // ✅ Evita iniciar chamada duplicada
+    if (peerConnection.current) {
+      console.warn("[⚠️] Uma chamada já está em andamento.");
       return;
     }
-
-   
-
-    // ✅ Garante que o target está definido corretamente
+  
     if (!toUserId) {
       console.warn("[❌] Nenhum destinatário especificado para a chamada.");
       return;
     }
-
+  
+    console.log("[DEBUG] [START_CALL] userId:", userId);
+    console.log("[DEBUG] [START_CALL] targetUserId:", toUserId);
+  
+    // ✅ Criar conexão peer
+    peerConnection.current = createPeerConnection();
+  
+    if (!peerConnection.current) {
+      console.error("[❌] Falha ao criar peerConnection");
+      return;
+    }
+  
     targetUserIdRef.current = toUserId;
     validateCallState("START_CALL");
-
-   
-
-    // Obter o stream de mídia local
-    const stream = await getLocalMediaStream();
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
+  
+    try {
+      // ✅ Obter o stream local ANTES de criar oferta
+      const stream = await getLocalMediaStream();
+  
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+  
+      // ✅ Adiciona tracks ao peer connection
+      stream.getTracks().forEach((track) => {
+        peerConnection.current.addTrack(track, stream);
+      });
+  
+      // ✅ Cria oferta
+      const offer = await peerConnection.current.createOffer();
+  
+      // ✅ Aguarda completamente o setLocalDescription
+      await peerConnection.current.setLocalDescription(offer);
+  
+      // ✅ Emite a oferta SOMENTE após o setLocalDescription estar finalizado
+      socket.emit("call-user", {
+        to: toUserId,
+        from: userId,
+        offer,
+        userName,
+      });
+  
+      setIsCalling(true);
+      console.log("[📞] Chamada iniciada com:", toUserId);
+  
+    } catch (error) {
+      console.error("[❌] Erro ao iniciar chamada:", error);
     }
-
+  };
+  
+  const acceptCall = async () => {
+    if (!incomingCall) return;
+  
+    ringAudioRef.current?.pause();
+    ringAudioRef.current.currentTime = 0;
+  
+    targetUserIdRef.current = incomingCall.from;
+    validateCallState("ACCEPT_CALL");
+  
+    peerConnection.current = createPeerConnection();
+  
+    if (!peerConnection.current) {
+      console.error("[❌] PeerConnection não criada");
+      return;
+    }
+  
+    const stream = await getLocalMediaStream();
+    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+  
     stream.getTracks().forEach((track) => {
       peerConnection.current.addTrack(track, stream);
     });
-
-    const offer = await peerConnection.current.createOffer();
-    await peerConnection.current.setLocalDescription(offer);
-
-    socket.emit("call-user", {
-      to: toUserId,
-      from: userId,
-      offer,
-      userName,
-    });
-
-    setIsCalling(true);
-    console.log("[📞] Chamada iniciada com:", toUserId);
-  };
-
-  const acceptCall = async () => {
-    if (!incomingCall) return;
-
-    ringAudioRef.current?.pause();
-    ringAudioRef.current.currentTime = 0;
-
-    targetUserIdRef.current = incomingCall.from;
-    validateCallState("ACCEPT_CALL");
-
-    peerConnection.current = createPeerConnection();
-
-    const stream = await getLocalMediaStream();
-    if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-
-    stream
-      .getTracks()
-      .forEach((track) => peerConnection.current.addTrack(track, stream));
-
+  
     await peerConnection.current.setRemoteDescription(
       new RTCSessionDescription(incomingCall.offer)
     );
-
+    console.log("[✅] RemoteDescription da offer aplicada.");
+  
     const answer = await peerConnection.current.createAnswer();
     await peerConnection.current.setLocalDescription(answer);
-
+    console.log("[✅] LocalDescription da answer aplicada.");
+  
     socket.emit("answer", {
-      answer,
+      answer: peerConnection.current.localDescription, // ← importante
       to: incomingCall.from,
     });
-
+  
     setIsCalling(true);
     setIncomingCall(null);
   };
+  
 
   const endCall = () => {
+   
     peerConnection.current?.close();
     peerConnection.current = null;
 
