@@ -4,7 +4,13 @@ import io from "socket.io-client";
 import styles from "../components/userList.module.css";
 import UserPanel from "../components/userPainel";
 
-function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
+function UserList({
+  onSelectUser,
+  userIdLogado,
+  currentUser,
+  setCurrentUser,
+  unreadCounts,
+}) {
   const [users, setUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState({});
   const socketRef = useRef(null);
@@ -94,6 +100,10 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
                 onlineUsers[user.id] ? styles.online : styles.offline
               }`}
             ></span>
+              {/* Badge de mensagens não lidas */}
+            {unreadCounts?.[user.id] > 0 && ( // <- Aqui você usa o unreadCounts recebido
+              <span className={styles.unread_badge}>{unreadCounts[user.id]}</span>
+            )}
           </div>
         ))}
 
@@ -103,6 +113,7 @@ function UserList({ onSelectUser, userIdLogado, currentUser, setCurrentUser }) {
           currentUser={currentUser}
           setCurrentUser={setCurrentUser}
           socket={socketRef.current}
+          unreadCounts={unreadCounts}
         />
       </div>
     </div>
