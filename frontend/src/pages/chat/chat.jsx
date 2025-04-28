@@ -23,7 +23,7 @@ import EmojiPicker from "../../components/EmojiPicker";
 
 import playNotificationSound from "../../components/notificacaoDaMensagem";
 
-import { useMemo } from "react";
+
 
 //import UserPanel from "../../components/userPainel"; // ajuste o caminho conforme seu projeto
 
@@ -409,6 +409,13 @@ function Chat() {
     }
   };
 
+  // funcao para mostrar o tempo da mensagem enviada
+  function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+
   // Estados para controlar o menu suspenso
   // inicializa uma variável de estado com o valor null. Isso significa que, inicialmente, nenhum menu está aberto.
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
@@ -516,6 +523,7 @@ function Chat() {
         <div className={styles.chat_content}>
           <div className={styles.chat_header}>
             <span className={styles.userName}>
+              <img  className={styles.user_avatar} src={destinatario?.avatar} alt="avatar do usuario" />
               {destinatario?.name || "desconhecido"}
             </span>
 
@@ -701,6 +709,11 @@ function Chat() {
                           )}
                         </p>
                       )}
+
+                      {/* 🕓 Hora da mensagem */}
+    <div className={styles.messageTime}>
+      {formatTime(message.timestamp)}
+    </div>
                     </div>
                   )}
                 </li>
