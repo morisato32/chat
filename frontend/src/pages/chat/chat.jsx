@@ -24,10 +24,13 @@ import EmojiPicker from "../../components/EmojiPicker";
 import playNotificationSound from "../../components/notificacaoDaMensagem";
 
 
-
 //import UserPanel from "../../components/userPainel"; // ajuste o caminho conforme seu projeto
 
-const socket = io("http://localhost:5000");
+const socket = io(`${window.location.protocol}//localhost:5000`, {
+  transports: ['websocket','polling'],
+  secure:true
+});
+
 
 function Chat() {
   const [messages, setMessages] = useState([]);
@@ -46,6 +49,11 @@ function Chat() {
   const [unreadCounts, setUnreadCounts] = useState({});
 
   const socketRef = useRef(socket); // Usando useRef para manter a referência do socket
+
+  socketRef.current.on("connect", () => {
+    console.log("Socket conectado com HTTPS");
+  });
+  
 
   useEffect(() => {
     // Verifica se já existe no sessionStorage
@@ -142,77 +150,71 @@ function Chat() {
 
   useEffect(() => {
     if (!socket || !userId) return;
-
+  
     socketRef.current = socket;
-
+  
     const reemitRegister = () => {
       console.log("🔁 (re)Registrando socket com userId:", userId);
       socket.emit("register", userId);
     };
-
+  
     reemitRegister();
     socket.on("connect", reemitRegister);
-
+  
     const handleReceiveMessage = (newMessage) => {
       console.log("📩 Mensagem recebida (global):", newMessage);
-
+  
       const destinatarioAtual = destinatarioRef.current;
-
-      const isCurrentChatActive =
-        destinatario && destinatario.id === newMessage.userId;
-
+  
       const isRelevant =
         (newMessage.userId === userId &&
           newMessage.destinatarioId === destinatarioAtual?.id) ||
         (newMessage.userId === destinatarioAtual?.id &&
           newMessage.destinatarioId === userId);
-
+  
+      const isCurrentChatActive =
+        destinatarioAtual && newMessage.userId === destinatarioAtual.id;
+  
       if (newMessage.userId !== userId) {
         playNotificationSound();
       }
-
+  
       if (isRelevant) {
+        // Evita duplicatas
         setMessages((prev) => {
           const exists = prev.some((m) => m.id === newMessage.id);
           return exists ? prev : [...prev, newMessage];
         });
-
-        if (isCurrentChatActive) {
-          // Se está conversando com o remetente, adiciona diretamente
-          setMessages((prevMessages) => [...prevMessages, newMessage]);
-        }
-
+  
         console.log("✅ Mensagem adicionada ao chat ativo:", newMessage);
-
-        if (newMessage.userId === destinatarioAtual?.id) {
-          console.log("📘 Marcar como lida:", newMessage.id);
-
+  
+        if (isCurrentChatActive) {
           socket.emit("marcarMensagemComoLida", {
             mensagemId: newMessage.id,
             usuarioId: userId,
           });
+  
+          console.log("📘 Marcar como lida:", newMessage.id);
         }
       } else {
-        console.log(
-          "📨 Mensagem recebida mas ignorada (chat inativo):",
-          newMessage
-        );
-
-        // ✅ Incrementa contador de mensagens não lidas APENAS se o chat está inativo
+        console.log("📨 Mensagem recebida mas ignorada (chat inativo):", newMessage);
+  
+        // ✅ Incrementa contador de mensagens não lidas
         setUnreadCounts((prev) => ({
           ...prev,
           [newMessage.userId]: (prev[newMessage.userId] || 0) + 1,
         }));
       }
     };
-
+  
     socket.on("receivePrivateMessage", handleReceiveMessage);
-
+  
     return () => {
       socket.off("connect", reemitRegister);
       socket.off("receivePrivateMessage", handleReceiveMessage);
     };
   }, [userId]);
+  
 
   useEffect(() => {
     if (!socketRef.current || !userId || !destinatario?.id) return;
@@ -357,7 +359,7 @@ function Chat() {
     formData.append("userId", userId);
 
     try {
-      const response = await api.post("http://localhost:5000/upload", formData);
+      const response = await api.post("https://localhost:5000/upload", formData);
       socket.emit("sendPrivateMessage", {
         conteudo: response.data.midiaUrl,
         fromUserId: userId,
@@ -412,9 +414,8 @@ function Chat() {
   // funcao para mostrar o tempo da mensagem enviada
   function formatTime(timestamp) {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
-  
 
   // Estados para controlar o menu suspenso
   // inicializa uma variável de estado com o valor null. Isso significa que, inicialmente, nenhum menu está aberto.
@@ -523,7 +524,19 @@ function Chat() {
         <div className={styles.chat_content}>
           <div className={styles.chat_header}>
             <span className={styles.userName}>
-              <img  className={styles.user_avatar} src={destinatario?.avatar} alt="avatar do usuario" />
+              <img
+                className={styles.user_avatar}
+                src={
+                  destinatario?.avatar?.startsWith("http")
+                    ? destinatario.avatar
+                    : `https://localhost:5000${destinatario?.avatar}`
+                }
+                alt="avatar do usuario"
+                onError={(e) => {
+                  e.target.src = "https://thumbs.dreamstime.com/b/%C3%ADcone-de-perfil-avatar-padr%C3%A3o-imagem-usu%C3%A1rio-m%C3%ADdia-social-210115353.jpg";
+                }}
+              />
+
               {destinatario?.name || "desconhecido"}
             </span>
 
@@ -711,9 +724,9 @@ function Chat() {
                       )}
 
                       {/* 🕓 Hora da mensagem */}
-    <div className={styles.messageTime}>
-      {formatTime(message.timestamp)}
-    </div>
+                      <div className={styles.messageTime}>
+                        {formatTime(message.timestamp)}
+                      </div>
                     </div>
                   )}
                 </li>

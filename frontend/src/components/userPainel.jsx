@@ -68,8 +68,8 @@ const UserPanel = ({ currentUser, setCurrentUser, socketRef }) => {
             ? currentUser.avatar.startsWith("http")
               ? currentUser.avatar
               : currentUser.avatar.startsWith("/")
-                ? `http://localhost:5000${currentUser.avatar}` // Adiciona o protocolo e domínio
-                : `http://localhost:5000/${currentUser.avatar}` // Adiciona protocolo, domínio e barra
+                ? `https://localhost:5000${currentUser.avatar}` // Adiciona o protocolo e domínio
+                : `https://localhost:5000/${currentUser.avatar}` // Adiciona protocolo, domínio e barra
             : "https://thumbs.dreamstime.com/b/%C3%ADcone-de-perfil-avatar-padr%C3%A3o-imagem-usu%C3%A1rio-m%C3%ADdia-social-210115353.jpg"
           }
           alt="Avatar"

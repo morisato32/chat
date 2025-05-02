@@ -21,13 +21,15 @@ function Login() {
       });
 
       // Verifica se a resposta da API contém o token
-      if (response.data.data.token) {
+      if (response.data.token) {
         const userData = {
-          token: response.data.data.token,
-          id: response.data.data.id,
-          name: response.data.data.name,
-          email: response.data.data.email,
-          avatar: response.data.data.avatar, // ✅ adicionar isso
+          token: response.data.token,
+          id: response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          avatar: response.data.user.avatar,
+          publicKey: response.data.user.publicKey,
+         
         };
 
         sessionStorage.setItem("user", JSON.stringify(userData));

@@ -43,7 +43,7 @@ function UserList({
   useEffect(() => {
     if (!userIdLogado) return;
 
-    socketRef.current = io("http://localhost:5000", {
+    socketRef.current = io("https://localhost:5000", {
       query: { userId: userIdLogado },
     });
 
@@ -88,10 +88,11 @@ function UserList({
                 user.avatar
                   ? user.avatar.startsWith("http")
                     ? user.avatar
-                    : `http://localhost:5000${user.avatar}`
+                    : `https://localhost:5000${user.avatar}`
                   : "https://thumbs.dreamstime.com/b/%C3%ADcone-de-perfil-avatar-padr%C3%A3o-imagem-usu%C3%A1rio-m%C3%ADdia-social-210115353.jpg"
               }
               alt="Avatar"
+              
               className={styles.user_avatar}
             />
             <span className={styles.user_name}>{user.name}</span>

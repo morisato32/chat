@@ -11,7 +11,7 @@ import {
 } from "react-icons/md";
 import styles from "../components/videoChat.module.css";
 
-const socket = io("http://localhost:5000");
+const socket = io("https://localhost:5000");
 
 const VideoChat = ({ userName, selectedUserId }) => {
   const [userId, setUserId] = useState(() => {

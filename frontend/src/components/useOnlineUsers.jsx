@@ -3,7 +3,7 @@ import io from "socket.io-client";
 
 function useOnlineUsers(userIdLogado) {
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const socket = io("http://localhost:5000");
+  const socket = io("https://localhost:5000");
 
   useEffect(() => {
     if (!userIdLogado) return;
