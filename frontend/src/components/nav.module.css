@@ -39,6 +39,35 @@
     transform: translateY(-2px);
     background-color: rgba(255, 255, 255, 0.1); /* Background sutil ao passar o mouse */
   }
+
+  /* InfoTooltip
+  .containerNav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f8f9fa;
+  }
+  
+  .securityInfo {
+    margin-right: auto;
+  }
+  
+  .navList {
+    display: flex;
+    list-style: none;
+    gap: 1rem;
+  }
+  
+  .navLink {
+    text-decoration: none;
+    color: #333;
+    padding: 0.5rem;
+  } */
+  
+  .navLink:hover {
+    color: #0066cc;
+  }
   
   /* Estilos responsivos (opcional) */
   @media (max-width: 768px) {

@@ -23,6 +23,10 @@ import EmojiPicker from "../../components/EmojiPicker";
 
 import playNotificationSound from "../../components/notificacaoDaMensagem";
 
+// import decryptePrivateKey from '../../components/decryptePrivateKey'
+
+import forge from 'node-forge';
+
 
 //import UserPanel from "../../components/userPainel"; // ajuste o caminho conforme seu projeto
 
@@ -49,6 +53,15 @@ function Chat() {
   const [unreadCounts, setUnreadCounts] = useState({});
 
   const socketRef = useRef(socket); // Usando useRef para manter a referência do socket
+  const privateKeyRef = useRef(null);
+
+    // 🔐 Carrega e armazena a chave privada no ref
+    // useEffect(() => {
+    //   const token = sessionStorage.getItem('token');
+    //   decryptePrivateKey(token).then((key) => {
+    //     if (key) privateKeyRef.current = key;
+    //   });
+    // }, []);
 
   socketRef.current.on("connect", () => {
     console.log("Socket conectado com HTTPS");
@@ -96,16 +109,33 @@ function Chat() {
 
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
-  // Recuperar ao carregar o componente
-  // No Chat.jsx ou onde você controla o estado do destinatario:
+  //✅ O que isso faz:
+  //Recupera o destinatario salvo.
+  
+ // Verifica se ele ainda está na lista de usuarios recebidos do backend.
+  
+ // Se sim, usa o destinatário.
+  
+ // Se não, limpa o localStorage e evita erro no backend.
+
+
   useEffect(() => {
-    if (userIdLogado) {
+    if (userIdLogado && user.length > 0) {
       const destinatarioSalvo = localStorage.getItem("destinatario");
       if (destinatarioSalvo) {
-        setDestinatario(JSON.parse(destinatarioSalvo));
+        const parsedDest = JSON.parse(destinatarioSalvo);
+        const aindaExiste = user.some(u => u.id === parsedDest.id);
+        if (aindaExiste) {
+          setDestinatario(parsedDest);
+        } else {
+          console.warn("⚠️ Destinatário salvo não encontrado na lista de usuários.");
+          localStorage.removeItem("destinatario");
+          setDestinatario(null);
+        }
       }
     }
-  }, [userIdLogado]);
+  }, [userIdLogado, user]);
+  
 
   // 🧠 Dica extra
   // Se você quiser manter localStorage sincronizado automaticamente com o estado React:
@@ -121,6 +151,8 @@ function Chat() {
   if (!user || !user.token) {
     navigate("/");
   }
+
+  
 
   // ✅ No frontend:
   // Ao conectar ou reconectar, o cliente deve SEMPRE reenviar o register:
@@ -148,57 +180,95 @@ function Chat() {
 
   // Isso evita tocar o som por mensagens enviadas por mim (até mesmo em outra aba).
 
+  // 🎯 Lógica principal de recepção + descriptografia
   useEffect(() => {
     if (!socket || !userId) return;
-  
+
     socketRef.current = socket;
-  
+
     const reemitRegister = () => {
       console.log("🔁 (re)Registrando socket com userId:", userId);
       socket.emit("register", userId);
     };
-  
+
     reemitRegister();
     socket.on("connect", reemitRegister);
-  
+
     const handleReceiveMessage = (newMessage) => {
       console.log("📩 Mensagem recebida (global):", newMessage);
-  
+
       const destinatarioAtual = destinatarioRef.current;
-  
+
       const isRelevant =
         (newMessage.userId === userId &&
           newMessage.destinatarioId === destinatarioAtual?.id) ||
         (newMessage.userId === destinatarioAtual?.id &&
           newMessage.destinatarioId === userId);
-  
+
       const isCurrentChatActive =
         destinatarioAtual && newMessage.userId === destinatarioAtual.id;
-  
+
       if (newMessage.userId !== userId) {
         playNotificationSound();
       }
-  
+
+      // ✅ Descriptografar se for relevante
       if (isRelevant) {
+        // Descriptografia 🔐
+        try {
+          const privateKey = privateKeyRef.current;
+          console.log('chave-privada:',privateKey)
+
+          if (!privateKey) {
+            console.warn("🔒 Chave privada ainda não carregada");
+            return;
+          }
+
+          // 1. Descriptografa a sessionKey (com RSA)
+          const sessionKeyBytes = privateKey.decrypt(
+            forge.util.decode64(newMessage.encryptedSessionKey),
+            'RSA-OAEP'
+          );
+
+          // 2. Cria a chave simétrica AES
+          const aesKey = forge.util.createBuffer(sessionKeyBytes, 'raw');
+          console.log('aesKey:',aesKey)
+
+          // 3. Descriptografa o conteúdo da mensagem (com AES)
+          const decipher = forge.cipher.createDecipher('AES-CBC', aesKey);
+          const iv = forge.util.decode64(newMessage.iv); // Vem da mensagem
+          decipher.start({ iv });
+          decipher.update(forge.util.createBuffer(forge.util.decode64(newMessage.content)));
+          const pass = decipher.finish();
+
+          if (pass) {
+            newMessage.content = decipher.output.toString();
+            console.log("🔓 Mensagem descriptografada:", newMessage.content);
+          } else {
+            console.warn("❌ Falha na descriptografia AES");
+          }
+
+        } catch (err) {
+          console.error("❌ Erro ao descriptografar mensagem:", err);
+        }
+
         // Evita duplicatas
         setMessages((prev) => {
           const exists = prev.some((m) => m.id === newMessage.id);
           return exists ? prev : [...prev, newMessage];
         });
-  
-        console.log("✅ Mensagem adicionada ao chat ativo:", newMessage);
-  
+
         if (isCurrentChatActive) {
           socket.emit("marcarMensagemComoLida", {
             mensagemId: newMessage.id,
             usuarioId: userId,
           });
-  
+
           console.log("📘 Marcar como lida:", newMessage.id);
         }
       } else {
         console.log("📨 Mensagem recebida mas ignorada (chat inativo):", newMessage);
-  
+
         // ✅ Incrementa contador de mensagens não lidas
         setUnreadCounts((prev) => ({
           ...prev,
@@ -206,9 +276,9 @@ function Chat() {
         }));
       }
     };
-  
+
     socket.on("receivePrivateMessage", handleReceiveMessage);
-  
+
     return () => {
       socket.off("connect", reemitRegister);
       socket.off("receivePrivateMessage", handleReceiveMessage);
@@ -356,7 +426,8 @@ function Chat() {
   const uploadFile = async (file, fileName, tipoMidia) => {
     const formData = new FormData();
     formData.append("file", file, fileName);
-    formData.append("userId", userId);
+    formData.append("fromUserId", userId); // ✅ nome correto
+    formData.append("toUserId", destinatario.id); // ✅ agora inclui o destinatário
 
     try {
       const response = await api.post("https://localhost:5000/upload", formData);

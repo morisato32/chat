@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 
+
 const slides = [
   {
     title: "Conecte-se com o mundo",
