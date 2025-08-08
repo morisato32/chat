@@ -8,14 +8,43 @@ const UserPanel = ({ currentUser, setCurrentUser, socketRef }) => {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatar || "");
+  // Depois (evita dessincronização)
+const [avatarUrl, setAvatarUrl] = useState(() => {
+  return currentUser?.avatar || localStorage.getItem(`avatar_${currentUser?.id}`) || "";
+});
   const menuRef = useRef(null);
 
-  const handleLogout = () => {
-    sessionStorage.clear();
-    localStorage.removeItem("user");
+const handleLogout = () => {
+    const confirma = window.confirm("Deseja realmente sair?");
+     if (!confirma) return;
+     
+  if (socketRef?.current) {
+    socketRef.current.on("disconnect", () => {
+      console.log("Socket desconectado, agora navegando...");
+      navigate("/");
+    });
+if (socketRef?.current && currentUser?.id) {
+  socketRef.current.emit("logout", { userId: currentUser.id });
+}
+
+    socketRef.current.disconnect();
+  } else {
     navigate("/");
-  };
+  }
+
+  sessionStorage.clear();
+  localStorage.removeItem("user");
+
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith("destinatario_")) {
+      localStorage.removeItem(key);
+    }
+  });
+
+  setCurrentUser(null);
+};
+
+
 
   useEffect(() => {
     if (currentUser?.avatar) {

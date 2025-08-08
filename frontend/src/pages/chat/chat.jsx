@@ -1,6 +1,7 @@
 import styles from "../../components/chat.module.css";
 import io from "socket.io-client";
-import { useEffect, useState, useRef } from "react";
+
+import { useEffect, useState, useRef, useMemo } from "react";
 import api from "../../services/api";
 import {
   MdFileUpload,
@@ -23,18 +24,79 @@ import EmojiPicker from "../../components/EmojiPicker";
 
 import playNotificationSound from "../../components/notificacaoDaMensagem";
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // import decryptePrivateKey from '../../components/decryptePrivateKey'
 
 import forge from 'node-forge';
+=======
+import { useCrypto } from "../../components/CryptoContext";
+// import { useSocket } from "../../components/SocketProvider";
+// import { useInitializedSocket } from "../../components/useInitializedSocket";
+>>>>>>> Stashed changes
 
+// import decryptePrivateKey from '../../components/decryptePrivateKey'
 
-//import UserPanel from "../../components/userPainel"; // ajuste o caminho conforme seu projeto
+import {
+  generateAESKey,
+  encryptWithAES,
+  exportKeyToBase64,
+  encryptWithPublicKey,
+  checkExistingSessionKey,
+  storeSessionKeyLocally,
+  getLocalSessionKey,
+  arrayBufferToBase64,
+  base64ToArrayBuffer,
+  decryptSessionKey,
+  getPublicKeyFromUser,
+  decryptMessage,
+  decryptOwnMessage,
+  decryptWithAES,
+  decryptWithPrivateKey,
+  importKeyFromBase64,
+  decryptPrivateKey,
+  importRSAPrivateKey,
+} from "../../components/criptografia";
 
+<<<<<<< Updated upstream
 const socket = io(`${window.location.protocol}//localhost:5000`, {
   transports: ['websocket','polling'],
   secure:true
 });
 
+=======
+//import UserPanel from "../../components/userPainel"; // ajuste o caminho conforme seu projeto
+>>>>>>> Stashed changes
+=======
+import { useCrypto } from "../../components/CryptoContext";
+// import { useSocket } from "../../components/SocketProvider";
+// import { useInitializedSocket } from "../../components/useInitializedSocket";
+
+// import decryptePrivateKey from '../../components/decryptePrivateKey'
+
+import {
+  generateAESKey,
+  encryptWithAES,
+  exportKeyToBase64,
+  encryptWithPublicKey,
+  checkExistingSessionKey,
+  storeSessionKeyLocally,
+  getLocalSessionKey,
+  arrayBufferToBase64,
+  base64ToArrayBuffer,
+  decryptSessionKey,
+  getPublicKeyFromUser,
+  decryptMessage,
+  decryptOwnMessage,
+  decryptWithAES,
+  decryptWithPrivateKey,
+  importKeyFromBase64,
+  decryptPrivateKey,
+  importRSAPrivateKey,
+} from "../../components/criptografia";
+
+//import UserPanel from "../../components/userPainel"; // ajuste o caminho conforme seu projeto
+>>>>>>> Stashed changes
 
 function Chat() {
   const [messages, setMessages] = useState([]);
@@ -46,12 +108,18 @@ function Chat() {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editedText, setEditedText] = useState(""); // Ao definir o estado, garanta que ele comece com "" para evitar valores undefined:
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const navigate = useNavigate();
 
-  const [destinatario, setDestinatario] = useState(null);
   const [userIdLogado, setUserIdLogado] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [usuarioCarregado, setUsuarioCarregado] = useState(false);
+  const [prontoParaInicializar, setProntoParaInicializar] = useState(false);
+  const [destinatario, setDestinatario] = useState(null);
+  const [connected, setConnected] = useState(false);
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
   const socketRef = useRef(socket); // Usando useRef para manter a referência do socket
   const privateKeyRef = useRef(null);
 
@@ -67,32 +135,53 @@ function Chat() {
     console.log("Socket conectado com HTTPS");
   });
   
+=======
+=======
+>>>>>>> Stashed changes
+  const {
+    encryptionPrivateKey,
+    setEncryptionPrivateKey,
+    signingPrivateKey,
+    setSigningPrivateKey,
+  } = useCrypto();
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
   useEffect(() => {
-    // Verifica se já existe no sessionStorage
-    let user = sessionStorage.getItem("user");
+  if (!currentUser?.id) return;
 
-    // Se não tiver no sessionStorage, tenta recuperar do localStorage
-    if (!user) {
-      user = localStorage.getItem("user");
+  const destinatarioSalvo = localStorage.getItem(`destinatario_${currentUser.id}`);
+  if (destinatarioSalvo) {
+    try {
+      const parsed = JSON.parse(destinatarioSalvo);
+      setDestinatario(parsed);
+    } catch (err) {
+      console.error("❌ Falha ao restaurar destinatário:", err);
+    }
+  }
+}, [currentUser?.id]);
 
-      if (user) {
-        sessionStorage.setItem("user", user); // Restaura para sessionStorage
+
+  const destinatarioRef = useRef(null);
+  const socketRef = useRef();
+
+  function clearAllSessionKeys() {
+    Object.keys(localStorage).forEach((key) => {
+      if (
+        key.startsWith("sessionKey_") &&
+        !key.match(/^sessionKey_[0-9a-f-]+$/)
+      ) {
+        console.log("🚫 Removendo chave inválida:", key);
+        localStorage.removeItem(key);
       }
-    }
+    });
+  }
 
-    if (user) {
-      const parsedUser = JSON.parse(user);
-      console.log("Usuário carregado:", parsedUser); // 👈 veja se avatar aparece aqui
-      setCurrentUser(parsedUser);
-      setUserIdLogado(parsedUser.id);
-    } else {
-      // Redireciona para login se não tiver user
-      navigate("/");
-    }
+  useEffect(() => {
+    clearAllSessionKeys();
   }, []);
-
-  const navigate = useNavigate();
 
   // emoji
   const handleEmojiSelect = (emoji) => {
@@ -100,15 +189,22 @@ function Chat() {
     setShowEmojiPicker(false);
   };
 
-  // 🧠 Por que mudar a dependência do useEffect?
-  // Com [], ele roda só uma vez no carregamento da página.
+  const [historicoPorDestinatario, setHistoricoPorDestinatario] = useState({});
+  console.log("🧠 Historico atual:", historicoPorDestinatario);
 
-  // Mas userId e destinatario podem vir depois (async ou mudança de estado).
+   // Funcão auxiliar
+  const gerarEncryptionKeyId = (userIdA, userIdB) => {
+    return [userIdA, userIdB].sort().join("-");
+  };
 
-  // Colocando [socket, userId, destinatario], você garante que o requestMessages será reenviado quando o usuário for selecionado.
+ const chaveConversa = useMemo(() => {
+  if (!userIdLogado || !destinatario?.id) return null;
+  return gerarEncryptionKeyId(userIdLogado, destinatario.id);
+}, [userIdLogado, destinatario?.id]);
+<<<<<<< Updated upstream
 
-  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
+<<<<<<< Updated upstream
   //✅ O que isso faz:
   //Recupera o destinatario salvo.
   
@@ -136,43 +232,244 @@ function Chat() {
     }
   }, [userIdLogado, user]);
   
+=======
+  const mensagensAtuais = useMemo(() => {
+    if (!chaveConversa) return [];
+    return historicoPorDestinatario[chaveConversa] || [];
+  }, [chaveConversa, historicoPorDestinatario]);
 
-  // 🧠 Dica extra
-  // Se você quiser manter localStorage sincronizado automaticamente com o estado React:
+  /** ==========================
+   *  Gerenciar usuário logado 
+   * Responsabilidade: Recuperar usuário da sessão e redirecionar se não estiver logado.
+  👍 Bem feito: Leitura única, navigate("/") previne acesso não autenticado.
+   *  ==========================
+   */
   useEffect(() => {
-    if (destinatario) {
-      localStorage.setItem("destinatario", JSON.stringify(destinatario));
+    const user = sessionStorage.getItem("user");
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      setCurrentUser(parsedUser);
+      setUserIdLogado(parsedUser.id);
+      setUsuarioCarregado(true);
+      setProntoParaInicializar(true);
+
+      // Tenta restaurar último destinatário do localStorage
+      const userData = JSON.parse(
+        localStorage.getItem(`userData_${parsedUser.id}`)
+      );
+      const ultimoContato = userData?.contacts
+        ? Object.values(userData.contacts)[0]
+        : null;
+      if (ultimoContato) setDestinatario(ultimoContato);
+
+      const senha = sessionStorage.getItem("senhaDeDesbloqueio");
+
+      // Restaurar chave de descriptografia
+      const {
+        encryptedEncryptionPrivateKey,
+        encryptionIv,
+        encryptionSalt,
+        encryptedSigningPrivateKey,
+        signingIv,
+        signingSalt,
+      } = parsedUser;
+
+      if (
+        encryptedEncryptionPrivateKey &&
+        encryptionIv &&
+        encryptionSalt &&
+        senha
+      ) {
+        decryptPrivateKey(
+          encryptedEncryptionPrivateKey,
+          senha,
+          encryptionIv,
+          encryptionSalt
+        )
+          .then(async (keyBuffer) => {
+            const chaveImportada = await window.crypto.subtle.importKey(
+              "pkcs8",
+              keyBuffer,
+              { name: "RSA-OAEP", hash: "SHA-256" },
+              true,
+              ["decrypt"]
+            );
+            setEncryptionPrivateKey(chaveImportada);
+          })
+          .catch((err) => {
+            console.error("❌ Falha ao restaurar encryptionPrivateKey:", err);
+          });
+      }
+>>>>>>> Stashed changes
+=======
+
+
+  const mensagensAtuais = useMemo(() => {
+    if (!chaveConversa) return [];
+    return historicoPorDestinatario[chaveConversa] || [];
+  }, [chaveConversa, historicoPorDestinatario]);
+
+  /** ==========================
+   *  Gerenciar usuário logado 
+   * Responsabilidade: Recuperar usuário da sessão e redirecionar se não estiver logado.
+  👍 Bem feito: Leitura única, navigate("/") previne acesso não autenticado.
+   *  ==========================
+   */
+  useEffect(() => {
+    const user = sessionStorage.getItem("user");
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      setCurrentUser(parsedUser);
+      setUserIdLogado(parsedUser.id);
+      setUsuarioCarregado(true);
+      setProntoParaInicializar(true);
+
+      // Tenta restaurar último destinatário do localStorage
+      const userData = JSON.parse(
+        localStorage.getItem(`userData_${parsedUser.id}`)
+      );
+      const ultimoContato = userData?.contacts
+        ? Object.values(userData.contacts)[0]
+        : null;
+      if (ultimoContato) setDestinatario(ultimoContato);
+
+      const senha = sessionStorage.getItem("senhaDeDesbloqueio");
+
+      // Restaurar chave de descriptografia
+      const {
+        encryptedEncryptionPrivateKey,
+        encryptionIv,
+        encryptionSalt,
+        encryptedSigningPrivateKey,
+        signingIv,
+        signingSalt,
+      } = parsedUser;
+
+      if (
+        encryptedEncryptionPrivateKey &&
+        encryptionIv &&
+        encryptionSalt &&
+        senha
+      ) {
+        decryptPrivateKey(
+          encryptedEncryptionPrivateKey,
+          senha,
+          encryptionIv,
+          encryptionSalt
+        )
+          .then(async (keyBuffer) => {
+            const chaveImportada = await window.crypto.subtle.importKey(
+              "pkcs8",
+              keyBuffer,
+              { name: "RSA-OAEP", hash: "SHA-256" },
+              true,
+              ["decrypt"]
+            );
+            setEncryptionPrivateKey(chaveImportada);
+          })
+          .catch((err) => {
+            console.error("❌ Falha ao restaurar encryptionPrivateKey:", err);
+          });
+      }
+>>>>>>> Stashed changes
+
+      if (encryptedSigningPrivateKey && signingIv && signingSalt && senha) {
+        decryptPrivateKey(
+          encryptedSigningPrivateKey,
+          senha,
+          signingIv,
+          signingSalt
+        )
+          .then(async (keyBuffer) => {
+            const chaveImportada = await window.crypto.subtle.importKey(
+              "pkcs8",
+              keyBuffer,
+              { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+              true,
+              ["sign"]
+            );
+            setSigningPrivateKey(chaveImportada);
+          })
+          .catch((err) => {
+            console.error("❌ Falha ao restaurar signingPrivateKey:", err);
+          });
+      }
+    } else {
+      navigate("/");
     }
-  }, [destinatario]);
+  }, []);
+<<<<<<< Updated upstream
 
-  const userId = user.id || null;
-  const userName = user.name || "Usuário Desconhecido";
+  // Restaurar destinatário salvo e solicitar histórico
+  // Responsabilidade: Restaurar destinatário do sessionStorage e buscar histórico.
+  //👍 Bem colocado: Usa currentUser.id como trigger e evita erro com try/catch
 
-  if (!user || !user.token) {
-    navigate("/");
-  }
-
+<<<<<<< Updated upstream
   
 
   // ✅ No frontend:
   // Ao conectar ou reconectar, o cliente deve SEMPRE reenviar o register:
+=======
+>>>>>>> Stashed changes
+=======
+
+  // Restaurar destinatário salvo e solicitar histórico
+  // Responsabilidade: Restaurar destinatário do sessionStorage e buscar histórico.
+  //👍 Bem colocado: Usa currentUser.id como trigger e evita erro com try/catch
+
+>>>>>>> Stashed changes
   useEffect(() => {
-    if (socket && userId) {
-      socket.emit("register", userId);
+    if (currentUser?.id) {
+      const destinatarioSalvo = sessionStorage.getItem(
+        `destinatario_${currentUser.id}`
+      );
+      if (destinatarioSalvo) {
+        try {
+          const destinatarioObj = JSON.parse(destinatarioSalvo);
+          console.log("🔎 destinatario restaurado:", destinatarioObj);
 
-      socket.on("connect", () => {
-        console.log("🔁 Reemitindo register após reconexão");
-        socket.emit("register", userId);
-      });
+          setDestinatario(destinatarioObj);
+          destinatarioRef.current = destinatarioObj;
+          console.log("Destinatário restaurado:", destinatarioObj);
+
+          // 🔥 Solicita o histórico imediatamente após restaurar
+          if (socketRef.current) {
+            console.log(
+              "🔄 Solicitando histórico após restaurar destinatário:",
+              destinatarioObj.id
+            );
+            socketRef.current.emit("requestMessages", {
+              withUserId: destinatarioObj.id,
+            });
+          }
+        } catch (err) {
+          console.error("Erro ao restaurar destinatário:", err);
+        }
+      }
     }
-  }, [socket, userId]);
+  }, [currentUser?.id]);
 
-  const destinatarioRef = useRef(null);
+  // Salvar destinatário sempre que mudar
+  // Responsabilidade: Persistir mudanças no destinatário.
+  //👍 Boa prática: Garante que o estado do app sobreviva a recarregamentos
+  useEffect(() => {
+    if (currentUser?.id && destinatario) {
+      sessionStorage.setItem(
+        `destinatario_${currentUser.id}`,
+        JSON.stringify(destinatario)
+      );
+    }
+  }, [destinatario, currentUser?.id]);
 
+  //  Sincronizar o destinatarioRef com o estado atual
+  // Responsabilidade: Garantir que destinatarioRef sempre aponte para o estado mais recente.
+  //👍 Importante: Fundamental para eventos em tempo real que não se beneficiam de re-renderizações.
   useEffect(() => {
     destinatarioRef.current = destinatario;
   }, [destinatario]);
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // 💡 Explicando a lógica:
   // message.destinatarioId === userId: a mensagem é para mim.
 
@@ -181,24 +478,47 @@ function Chat() {
   // Isso evita tocar o som por mensagens enviadas por mim (até mesmo em outra aba).
 
   // 🎯 Lógica principal de recepção + descriptografia
+=======
+=======
+>>>>>>> Stashed changes
+  /** ==========================
+   *  Inicializar Socket
+   *  ==========================
+   */
+  console.log("🧪 Inicializando socket para", userIdLogado);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
   useEffect(() => {
-    if (!socket || !userId) return;
+    const socket = io(`${window.location.protocol}//localhost:5000`, {
+      transports: ["websocket", "polling"],
+      secure: true,
+    });
 
     socketRef.current = socket;
 
-    const reemitRegister = () => {
-      console.log("🔁 (re)Registrando socket com userId:", userId);
-      socket.emit("register", userId);
+    const handleConnect = () => {
+       console.log("✅ Socket conectado no frontend");
+      setConnected(true); // <-- ADICIONE ISSO
+      socket.emit("register", userIdLogado);
     };
 
-    reemitRegister();
-    socket.on("connect", reemitRegister);
+    const handleDisconnect = () => {
+      console.log("🔌 Socket desconectado");
+      setConnected(false); // <-- ADICIONE ISSO
+    };
+<<<<<<< Updated upstream
 
-    const handleReceiveMessage = (newMessage) => {
-      console.log("📩 Mensagem recebida (global):", newMessage);
+    if (socket.connected) {
+      handleConnect();
+    } else {
+      socket.on("connect", handleConnect);
+    }
 
-      const destinatarioAtual = destinatarioRef.current;
+    socket.on("disconnect", handleDisconnect);
 
+<<<<<<< Updated upstream
       const isRelevant =
         (newMessage.userId === userId &&
           newMessage.destinatarioId === destinatarioAtual?.id) ||
@@ -265,8 +585,228 @@ function Chat() {
           });
 
           console.log("📘 Marcar como lida:", newMessage.id);
+=======
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.disconnect();
+    };
+  }, [userIdLogado]);
+
+ 
+
+  /** ==========================
+   *  Receber mensagens privadas - destinatario
+   *  ==========================
+   */
+useEffect(() => {
+  const socket = socketRef.current;
+
+  console.group("🧩 [useEffect] Iniciando escuta de mensagens socket");
+  console.log("🧑‍💻 userIdLogado:", userIdLogado);
+  console.log("🎯 destinatario:", destinatario);
+  console.log("📡 socket conectado:", !!socket);
+  console.groupEnd();
+
+  if (!userIdLogado || !destinatario) return;
+
+  const handlePrivateMessage = async (mensagem) => {
+    console.group("📥 Mensagem recebida via socket");
+    console.log("🧾 Conteúdo da mensagem:", mensagem);
+
+    const {
+      id,
+      conteudo,
+      fromUserId,
+      toUserId,
+      encryptedSessionKey,
+      encryptionKeyId,
+      encryptionIV,
+    } = mensagem;
+
+    const souDestinatario = toUserId === userIdLogado;
+
+    console.log("🧭 souDestinatario:", souDestinatario);
+    console.log("🆔 fromUserId:", fromUserId);
+    console.log("🆔 toUserId:", toUserId);
+    console.log("🆔 userIdLogado:", userIdLogado);
+
+    if (souDestinatario && (!encryptionPrivateKey || !encryptedSessionKey)) {
+      console.error(
+        "❌ Dados insuficientes para descriptografar a sessionKey.",
+        {
+          encryptionPrivateKey,
+          encryptedSessionKey,
+          userIdLogado,
+          toUserId,
         }
+      );
+      return;
+    }
+
+    const chaveConversa = gerarEncryptionKeyId(fromUserId, toUserId);
+    console.log("🔑 Chave de conversa gerada:", chaveConversa);
+
+    try {
+      console.log("🧩 ID da chave de sessão:", encryptionKeyId);
+      console.log(
+        "🔎 Buscando chave de sessão local:",
+        "sessionKey_" + encryptionKeyId
+      );
+
+      let sessionKey = await getLocalSessionKey(encryptionKeyId);
+
+      console.log("📦 sessionKey retornada de getLocalSessionKey:", sessionKey);
+
+      if (!sessionKey) {
+        console.log("🔐 encryptedSessionKey recebida:", encryptedSessionKey);
+
+        if (!encryptedSessionKey || !encryptionKeyId || !encryptionPrivateKey) {
+          console.warn("❌ Dados insuficientes para descriptografar a sessionKey.");
+          throw new Error("Dados insuficientes");
+>>>>>>> Stashed changes
+        }
+=======
+
+    if (socket.connected) {
+      handleConnect();
+    } else {
+      socket.on("connect", handleConnect);
+    }
+
+    socket.on("disconnect", handleDisconnect);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.disconnect();
+    };
+  }, [userIdLogado]);
+
+ 
+
+  /** ==========================
+   *  Receber mensagens privadas - destinatario
+   *  ==========================
+   */
+useEffect(() => {
+  const socket = socketRef.current;
+
+  console.group("🧩 [useEffect] Iniciando escuta de mensagens socket");
+  console.log("🧑‍💻 userIdLogado:", userIdLogado);
+  console.log("🎯 destinatario:", destinatario);
+  console.log("📡 socket conectado:", !!socket);
+  console.groupEnd();
+
+  if (!userIdLogado || !destinatario) return;
+
+  const handlePrivateMessage = async (mensagem) => {
+    console.group("📥 Mensagem recebida via socket");
+    console.log("🧾 Conteúdo da mensagem:", mensagem);
+
+    const {
+      id,
+      conteudo,
+      fromUserId,
+      toUserId,
+      encryptedSessionKey,
+      encryptionKeyId,
+      encryptionIV,
+    } = mensagem;
+
+    const souDestinatario = toUserId === userIdLogado;
+
+    console.log("🧭 souDestinatario:", souDestinatario);
+    console.log("🆔 fromUserId:", fromUserId);
+    console.log("🆔 toUserId:", toUserId);
+    console.log("🆔 userIdLogado:", userIdLogado);
+
+    if (souDestinatario && (!encryptionPrivateKey || !encryptedSessionKey)) {
+      console.error(
+        "❌ Dados insuficientes para descriptografar a sessionKey.",
+        {
+          encryptionPrivateKey,
+          encryptedSessionKey,
+          userIdLogado,
+          toUserId,
+        }
+      );
+      return;
+    }
+
+    const chaveConversa = gerarEncryptionKeyId(fromUserId, toUserId);
+    console.log("🔑 Chave de conversa gerada:", chaveConversa);
+
+    try {
+      console.log("🧩 ID da chave de sessão:", encryptionKeyId);
+      console.log(
+        "🔎 Buscando chave de sessão local:",
+        "sessionKey_" + encryptionKeyId
+      );
+
+      let sessionKey = await getLocalSessionKey(encryptionKeyId);
+
+      console.log("📦 sessionKey retornada de getLocalSessionKey:", sessionKey);
+
+      if (!sessionKey) {
+        console.log("🔐 encryptedSessionKey recebida:", encryptedSessionKey);
+
+        if (!encryptedSessionKey || !encryptionKeyId || !encryptionPrivateKey) {
+          console.warn("❌ Dados insuficientes para descriptografar a sessionKey.");
+          throw new Error("Dados insuficientes");
+        }
+>>>>>>> Stashed changes
+
+        const decryptedRawKey = await decryptWithPrivateKey(
+          encryptionPrivateKey,
+          encryptedSessionKey
+        );
+
+        sessionKey = await importKeyFromBase64(decryptedRawKey);
+
+        const rawKeyBuffer = await window.crypto.subtle.exportKey("raw", sessionKey);
+<<<<<<< Updated upstream
+        console.log(
+          "🔑 SessionKey Destinatario (importada):",
+=======
+        console.log(
+          "🔑 SessionKey Destinatario (importada):",
+          arrayBufferToBase64(rawKeyBuffer)
+        );
+
+        await storeSessionKeyLocally(encryptionKeyId, {
+          rawKey: sessionKey,
+          encryptedKey: encryptedSessionKey,
+        });
+
+        console.log("✅ Chave de sessão importada e salva.");
       } else {
+        console.log("✅ Chave de sessão local encontrada.");
+
+        const cryptoKey = sessionKey?.rawKey || sessionKey;
+
+        if (!(cryptoKey instanceof CryptoKey)) {
+          console.error("❌ sessionKey inválida ao exportar:", sessionKey);
+          return;
+        }
+
+        const rawKeyBuffer = await window.crypto.subtle.exportKey("raw", cryptoKey);
+        console.log(
+          "🔑 SessionKey Destinatario (local):",
+>>>>>>> Stashed changes
+          arrayBufferToBase64(rawKeyBuffer)
+        );
+      }
+
+<<<<<<< Updated upstream
+        await storeSessionKeyLocally(encryptionKeyId, {
+          rawKey: sessionKey,
+          encryptedKey: encryptedSessionKey,
+        });
+
+        console.log("✅ Chave de sessão importada e salva.");
+      } else {
+<<<<<<< Updated upstream
         console.log("📨 Mensagem recebida mas ignorada (chat inativo):", newMessage);
 
         // ✅ Incrementa contador de mensagens não lidas
@@ -274,87 +814,732 @@ function Chat() {
           ...prev,
           [newMessage.userId]: (prev[newMessage.userId] || 0) + 1,
         }));
+=======
+        console.log("✅ Chave de sessão local encontrada.");
+
+        const cryptoKey = sessionKey?.rawKey || sessionKey;
+
+        if (!(cryptoKey instanceof CryptoKey)) {
+          console.error("❌ sessionKey inválida ao exportar:", sessionKey);
+          return;
+        }
+
+        const rawKeyBuffer = await window.crypto.subtle.exportKey("raw", cryptoKey);
+        console.log(
+          "🔑 SessionKey Destinatario (local):",
+          arrayBufferToBase64(rawKeyBuffer)
+        );
       }
-    };
 
-    socket.on("receivePrivateMessage", handleReceiveMessage);
+      console.log("🔍 Verificando se conteudo é base64 válido:", conteudo);
+      console.log("🧊 IV base64 recebido:", encryptionIV);
 
+      const cryptoKey = sessionKey?.rawKey || sessionKey;
+
+      if (!(cryptoKey instanceof CryptoKey)) {
+        console.error("❌ sessionKey não é CryptoKey:", sessionKey);
+        return;
+>>>>>>> Stashed changes
+      }
+
+=======
+      console.log("🔍 Verificando se conteudo é base64 válido:", conteudo);
+      console.log("🧊 IV base64 recebido:", encryptionIV);
+
+      const cryptoKey = sessionKey?.rawKey || sessionKey;
+
+      if (!(cryptoKey instanceof CryptoKey)) {
+        console.error("❌ sessionKey não é CryptoKey:", sessionKey);
+        return;
+      }
+
+>>>>>>> Stashed changes
+      console.log("🔎 cryptoKey:", cryptoKey);
+      console.log("🔎 Tipo:", cryptoKey?.type);
+      console.log("🔎 Algoritmo:", cryptoKey?.algorithm);
+      console.log("🔎 Usages:", cryptoKey?.usages);
+      console.log("🔎 Conteúdo base64:", conteudo);
+      console.log("🔎 encryptionIV:", encryptionIV);
+
+      const decryptedContent = await decryptWithAES(cryptoKey, conteudo, encryptionIV);
+
+      if (!decryptedContent || !(decryptedContent instanceof ArrayBuffer)) {
+        throw new Error("Conteúdo descriptografado inválido.");
+      }
+
+      const plainText = new TextDecoder().decode(decryptedContent);
+      console.log("✅ Mensagem descriptografada:", plainText);
+
+      console.log("📚 Atualizando histórico com nova mensagem");
+      setHistoricoPorDestinatario((prev) => {
+        const mensagensExistentes = prev[chaveConversa] || [];
+        const jaExiste = mensagensExistentes.some((m) => m.id === id);
+        if (jaExiste) {
+          console.log("🔁 Mensagem já existia no histórico. Ignorando.");
+          return prev;
+        }
+
+        console.log("➕ Adicionando nova mensagem ao histórico.");
+        return {
+          ...prev,
+          [chaveConversa]: [
+            ...mensagensExistentes,
+            { ...mensagem, plainText },
+          ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)),
+        };
+      });
+    } catch (error) {
+      console.error("❌ Erro ao processar mensagem recebida:", error);
+
+      console.log("⚠️ Salvando mensagem como inválida (plainText null)");
+      setHistoricoPorDestinatario((prev) => {
+        const mensagensExistentes = prev[chaveConversa] || [];
+        const jaExiste = mensagensExistentes.some((m) => m.id === id);
+        if (jaExiste) return prev;
+<<<<<<< Updated upstream
+
+        return {
+          ...prev,
+          [chaveConversa]: [
+            ...mensagensExistentes,
+            { ...mensagem, plainText: null },
+          ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)),
+        };
+      });
+    }
+
+    console.groupEnd();
+  };
+
+  socket.on("receivePrivateMessage", handlePrivateMessage);
+  return () => {
+    socket.off("receivePrivateMessage", handlePrivateMessage);
+  };
+}, [encryptionPrivateKey, signingPrivateKey, userIdLogado, destinatario]);
+
+<<<<<<< Updated upstream
     return () => {
       socket.off("connect", reemitRegister);
       socket.off("receivePrivateMessage", handleReceiveMessage);
     };
   }, [userId]);
   
+=======
+>>>>>>> Stashed changes
+=======
+
+        return {
+          ...prev,
+          [chaveConversa]: [
+            ...mensagensExistentes,
+            { ...mensagem, plainText: null },
+          ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)),
+        };
+      });
+    }
+
+    console.groupEnd();
+  };
+
+  socket.on("receivePrivateMessage", handlePrivateMessage);
+  return () => {
+    socket.off("receivePrivateMessage", handlePrivateMessage);
+  };
+}, [encryptionPrivateKey, signingPrivateKey, userIdLogado, destinatario]);
+
+>>>>>>> Stashed changes
 
   useEffect(() => {
-    if (!socketRef.current || !userId || !destinatario?.id) return;
+    const socket = socketRef.current;
+    if (!socket) return;
+<<<<<<< Updated upstream
 
-    console.log("📥 Carregando histórico com:", destinatario.id);
+    const pronto =
+      socket.connected &&
+      userIdLogado &&
+      destinatario?.id &&
+      encryptionPrivateKey;
 
-    socketRef.current.emit("requestMessages", {
-      fromUserId: userId,
+    if (!pronto) return;
+
+=======
+
+    const pronto =
+      socket.connected &&
+      userIdLogado &&
+      destinatario?.id &&
+      encryptionPrivateKey;
+
+    if (!pronto) return;
+
+>>>>>>> Stashed changes
+    console.log("✅ Reativos: solicitando histórico");
+
+    socket.emit("requestMessages", {
+      fromUserId: userIdLogado,
       toUserId: destinatario.id,
     });
+  }, [
+    userIdLogado,
+    destinatario?.id,
+    encryptionPrivateKey,
+    socketRef.current?.connected,
+  ]);
 
-    const handleLoadMessages = (messages) => {
-      setMessages(messages);
+  /** ==========================
+   *  📥 Solicitar e receber histórico de mensagens
+   *  ==========================
+   */
+  useEffect(() => {
+
+     if (!userIdLogado || !destinatario?.id || !encryptionPrivateKey) return;
+
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const solicitarMensagens = () => {
+      const pronto =
+        socket.connected &&
+        userIdLogado &&
+        destinatario?.id &&
+        encryptionPrivateKey;
+
+      if (!pronto) {
+        console.warn("🚫 Dados insuficientes para solicitar mensagens.", {
+          userId: userIdLogado,
+          destinatarioId: destinatario?.id,
+          connected: socket.connected,
+        });
+        return;
+      }
+<<<<<<< Updated upstream
+
+      console.log(
+        "🔍 Solicitando histórico de",
+        userIdLogado,
+        "para",
+        destinatario?.id
+      );
+
+=======
+
+      console.log(
+        "🔍 Solicitando histórico de",
+        userIdLogado,
+        "para",
+        destinatario?.id
+      );
+
+>>>>>>> Stashed changes
+      socket.emit("requestMessages", {
+        fromUserId: userIdLogado,
+        toUserId: destinatario.id,
+      });
     };
 
-    socketRef.current.on("loadMessages", handleLoadMessages);
+    const descriptografarMensagens = async (mensagens) => {
+      const descriptografadas = [];
 
+      for (const mensagem of mensagens) {
+        const {
+          conteudo,
+          encryptedSessionKey,
+          encryptionIV,
+          originalPlainText,
+          userId: remetenteId,
+        } = mensagem;
+
+        const souRemetente = remetenteId === userIdLogado;
+        let plainText = null;
+
+        const encryptionKeyId = gerarEncryptionKeyId(userIdLogado, remetenteId);
+
+
+
+        try {
+          if (souRemetente && originalPlainText) {
+            plainText = originalPlainText;
+          } else {
+            let aesKey = await getLocalSessionKey(encryptionKeyId);
+
+            if (!aesKey && encryptedSessionKey && encryptionPrivateKey) {
+              aesKey = await decryptSessionKey(
+                encryptedSessionKey,
+                encryptionPrivateKey
+              );
+              await storeSessionKeyLocally(encryptionKeyId, {
+                rawKey: aesKey,
+                encryptedKey: encryptedSessionKey,
+              });
+            }
+
+            console.log("🔐 Tentando descriptografar com chave AES:", aesKey);
+console.log("🧾 Conteúdo:", conteudo);
+console.log("🧾 IV:", encryptionIV);
+
+if (!(aesKey instanceof CryptoKey)) {
+  console.error("❌ aesKey não é um CryptoKey válido!");
+  return;
+}
+<<<<<<< Updated upstream
+
+
+=======
+
+
+>>>>>>> Stashed changes
+            if (aesKey && encryptionIV && conteudo) {
+              plainText = await decryptMessage({
+                conteudo,
+                encryptionIV,
+                aesKey,
+              });
+            }
+          }
+        } catch (err) {
+          console.error(
+            "❌ Falha ao descriptografar mensagem do histórico:",
+            err
+          );
+        }
+
+        descriptografadas.push({ ...mensagem, plainText });
+      }
+
+      return descriptografadas;
+    };
+
+    const handleLoadMessages = async (messages) => {
+      if (!messages || messages.length === 0) return;
+
+      const descriptografadas = await descriptografarMensagens(messages);
+
+      const primeiro = descriptografadas[0];
+      const chaveConversa = gerarEncryptionKeyId(
+        primeiro.fromUserId,
+        primeiro.toUserId
+      );
+<<<<<<< Updated upstream
+
+      setHistoricoPorDestinatario((prev) => ({
+        ...prev,
+        [chaveConversa]: descriptografadas.sort(
+          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+        ),
+      }));
+    };
+
+    // Solicita imediatamente se o socket já estiver conectado
+    if (socket.connected) {
+      solicitarMensagens();
+    } else {
+      socket.on("connect", solicitarMensagens);
+    }
+
+    socket.on("loadMessages", handleLoadMessages);
+
+=======
+
+      setHistoricoPorDestinatario((prev) => ({
+        ...prev,
+        [chaveConversa]: descriptografadas.sort(
+          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+        ),
+      }));
+    };
+
+    // Solicita imediatamente se o socket já estiver conectado
+    if (socket.connected) {
+      solicitarMensagens();
+    } else {
+      socket.on("connect", solicitarMensagens);
+    }
+
+    socket.on("loadMessages", handleLoadMessages);
+
+>>>>>>> Stashed changes
     return () => {
-      socketRef.current.off("loadMessages", handleLoadMessages);
+      socket.off("connect", solicitarMensagens);
+      socket.off("loadMessages", handleLoadMessages);
     };
-  }, [userId, destinatario]);
+  }, [userIdLogado, destinatario?.id, encryptionPrivateKey]);
 
-  // useEffect(() => {
-  //   console.log("🧾 Todas mensagens:", messages);
-  // }, [messages]);
-
-  // status da mensagem
-
-  // Quando abre a conversa com alguém, marca as mensagens como lidas
+  /** ==========================
+   *  Atualizar status "lida"
+   *  ==========================
+   */
   useEffect(() => {
     if (!destinatario?.id || !userIdLogado) return;
+    const socket = socketRef.current;
+    if (!socket || !socket.connected) return;
 
     socket.emit("marcar_como_lida", {
-      remetenteId: destinatario.id, // <- Quem enviou a mensagem (userId no banco)
-      destinatarioId: userId, // <- eu (o logado) estou lendo agora
+      remetenteId: destinatario.id,
+      destinatarioId: userIdLogado,
     });
 
     socket.emit("entrouNaConversa", {
-      userId: userId,
+      userId: userIdLogado,
       conversandoComId: destinatario.id,
     });
+  }, [destinatario, userIdLogado]);
 
-    console.log(
-      "📤 Emitido 'marcar_como_lida' de:",
-      userId,
-      "para:",
-      destinatario.id
-    );
-  }, [destinatario, userId]);
-
-  // Quando o servidor responde com as mensagens marcadas como lidas
+  /** ==========================
+   *  Mensagens marcadas como lidas
+   *  ==========================
+   */
+  /** ==========================
+   *  🔔 Nova mensagem não lida
+   *  ==========================
+   */
   useEffect(() => {
-    socket.on("mensagens_lidas", ({ de, mensagens }) => {
-      console.log("🔵 Mensagens lidas recebidas de:", de, mensagens);
+    const socket = socketRef.current;
+    if (!socket) return;
 
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.userId === userId &&
-          msg.destinatarioId === de &&
-          mensagens.some((m) => m.id === msg.id)
-            ? { ...msg, status: "LIDA" }
-            : msg
-        )
-      );
-    });
+    const handleNovaMensagemNaoLida = async ({ fromUserId, mensagem }) => {
+      console.log("📩 Nova mensagem não lida de:", fromUserId, mensagem);
+      console.log("🚨 Mensagem recebida via socket:", mensagem);
+      console.log("🟦 Histórico antes:", historicoPorDestinatario);
+
+      // Atualiza contador de não lidas
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [fromUserId]: (prev[fromUserId] || 0) + 1,
+      }));
+
+     const chaveConversa = gerarEncryptionKeyId(fromUserId, userIdLogado);
+
+
+      // 🔓 Descriptografar o conteúdo
+      let plainText = null;
+      try {
+        const sessionKey = await getLocalSessionKey(mensagem.encryptionKeyId);
+        if (sessionKey) {
+          plainText = await decryptWithAES(
+            sessionKey?.rawKey || sessionKey,
+            mensagem.conteudo,
+            mensagem.encryptionIV
+          );
+        } else {
+          console.warn(
+            "⚠️ Chave de sessão ausente, mensagem não pode ser lida."
+          );
+        }
+      } catch (err) {
+        console.error("❌ Falha ao descriptografar mensagem:", err);
+      }
+      console.log("🔓 plainText:", plainText);
+
+      setHistoricoPorDestinatario((prev) => {
+        const mensagensExistentes = prev[chaveConversa] || [];
+        const jaExiste = mensagensExistentes.some((m) => m.id === mensagem.id);
+        if (jaExiste) return prev;
+
+        return {
+          ...prev,
+          [chaveConversa]: [
+            ...mensagensExistentes,
+            { ...mensagem, plainText },
+          ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)),
+        };
+      });
+
+      playNotificationSound();
+    };
+
+    socket.on("nova_mensagem_nao_lida", handleNovaMensagemNaoLida);
 
     return () => {
-      socket.off("mensagens_lidas");
+      socket.off("nova_mensagem_nao_lida", handleNovaMensagemNaoLida);
     };
-  }, [userId]);
+  }, [userIdLogado]);
+
+  // 🔄 Resetar histórico ao trocar de usuário logado
+  useEffect(() => {
+    setHistoricoPorDestinatario({});
+  }, [userIdLogado]);
+
+  /** ==========================
+   *  Scroll automático
+   *  ==========================
+   */
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [destinatario?.id]);
+
+  /** ==========================
+   *  Enviar mensagem - remetente
+   *  ==========================
+   */
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+
+    if (!destinatario?.id || !userIdLogado) return;
+
+    const socket = socketRef.current;
+    if (!socket) {
+      console.warn("⚠️ Socket não está disponível no momento.");
+      return;
+    }
+
+    if (!newMessage.trim()) return;
+
+    try {
+      const encryptionKeyId = gerarEncryptionKeyId(
+        userIdLogado,
+        destinatario.id
+      );
+
+      let sessionKey;
+      let encryptedSessionKey;
+      const localSessionKey = await getLocalSessionKey(encryptionKeyId);
+<<<<<<< Updated upstream
+
+      if (localSessionKey) {
+        console.log("✅ SessionKey encontrada localmente.");
+        sessionKey = localSessionKey.rawKey;
+        encryptedSessionKey = localSessionKey.encryptedKey;
+      } else {
+        console.log("🚀 Gerando nova SessionKey...");
+        sessionKey = await generateAESKey();
+        const exportedKey = await exportKeyToBase64(sessionKey);
+
+=======
+
+      if (localSessionKey) {
+        console.log("✅ SessionKey encontrada localmente.");
+        sessionKey = localSessionKey.rawKey;
+        encryptedSessionKey = localSessionKey.encryptedKey;
+      } else {
+        console.log("🚀 Gerando nova SessionKey...");
+        sessionKey = await generateAESKey();
+        const exportedKey = await exportKeyToBase64(sessionKey);
+
+>>>>>>> Stashed changes
+        encryptedSessionKey = await encryptWithPublicKey(
+          destinatario.publicKeys.encryption,
+          exportedKey
+        );
+<<<<<<< Updated upstream
+
+        await storeSessionKeyLocally(encryptionKeyId, {
+          rawKey: sessionKey,
+          encryptedKey: encryptedSessionKey,
+        });
+      }
+
+      const { encryptedContent, encryptionIV } = await encryptWithAES(
+        sessionKey,
+        newMessage.trim()
+      );
+
+      const signatureBuffer = await crypto.subtle.sign(
+        { name: "RSASSA-PKCS1-v1_5" },
+        signingPrivateKey,
+        base64ToArrayBuffer(encryptedContent)
+      );
+
+=======
+
+        await storeSessionKeyLocally(encryptionKeyId, {
+          rawKey: sessionKey,
+          encryptedKey: encryptedSessionKey,
+        });
+      }
+
+      const { encryptedContent, encryptionIV } = await encryptWithAES(
+        sessionKey,
+        newMessage.trim()
+      );
+
+      const signatureBuffer = await crypto.subtle.sign(
+        { name: "RSASSA-PKCS1-v1_5" },
+        signingPrivateKey,
+        base64ToArrayBuffer(encryptedContent)
+      );
+
+>>>>>>> Stashed changes
+      const signature = arrayBufferToBase64(signatureBuffer);
+      const mensagemId = crypto.randomUUID();
+
+      const messageData = {
+        id: mensagemId,
+        conteudo: encryptedContent,
+        fromUserId: userIdLogado,
+        toUserId: destinatario.id,
+        encryptionIV,
+        signature,
+        encryptionKeyId,
+        encryptedSessionKey,
+        tipoMidia: "texto",
+        timestamp: new Date().toISOString(),
+      };
+
+      // const chaveConversa = gerarEncryptionKeyId(userIdLogado, destinatario.id);
+
+      // setHistoricoPorDestinatario((prev) => ({
+      //   ...prev,
+      //   [chaveConversa]: [
+      //     ...(prev[chaveConversa] || []),
+      //     {
+      //       ...messageData,
+      //       plainText: newMessage.trim(),
+      //       user: { name: currentUser.name },
+      //     },
+      //   ],
+      // }));
+
+      console.log("✅ Emitindo socket com dados:", messageData);
+      socket.emit("sendPrivateMessage", messageData);
+
+      setNewMessage("");
+    } catch (error) {
+      console.error("❌ Erro no envio da mensagem:", error);
+    }
+  };
+
+  const uploadFile = async (file, fileName, tipoMidia) => {
+    const formData = new FormData();
+    formData.append("file", file, fileName);
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+    formData.append("fromUserId", userId); // ✅ nome correto
+    formData.append("toUserId", destinatario.id); // ✅ agora inclui o destinatário
+
+    try {
+      const response = await api.post("https://localhost:5000/upload", formData);
+      socket.emit("sendPrivateMessage", {
+=======
+    formData.append("fromUserId", userIdLogado);
+    formData.append("toUserId", destinatario.id);
+
+    try {
+      const response = await api.post("http://localhost:5000/upload", formData);
+      socketRef.current?.emit("sendPrivateMessage", {
+>>>>>>> Stashed changes
+=======
+    formData.append("fromUserId", userIdLogado);
+    formData.append("toUserId", destinatario.id);
+
+    try {
+      const response = await api.post("http://localhost:5000/upload", formData);
+      socketRef.current?.emit("sendPrivateMessage", {
+>>>>>>> Stashed changes
+        conteudo: response.data.midiaUrl,
+        fromUserId: userIdLogado,
+        toUserId: destinatario.id,
+        tipoMidia,
+      });
+    } catch (error) {
+      console.error("❌ Erro ao enviar arquivo:", error);
+    }
+  };
+
+  const getFileType = (mimeType) => {
+    if (mimeType.startsWith("image/")) return "imagem";
+    if (mimeType.startsWith("audio/")) return "audio";
+    if (mimeType.startsWith("video/")) return "video";
+    if (mimeType === "application/pdf") return "pdf";
+    return "arquivo";
+  };
+
+  const startRecording = async () => {
+    if (isRecording) return;
+
+    setIsRecording(true);
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+    mediaRecorderRef.current = mediaRecorder;
+    const chunks = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      chunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      setIsRecording(false);
+      const audioBlob = new Blob(chunks, { type: "audio/webm" });
+      await uploadFile(audioBlob, "audio.webm", "audio");
+    };
+
+    mediaRecorder.start();
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current?.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  const [openMenuIndex, setOpenMenuIndex] = useState(null);
+
+  const toggleMenu = (index) => {
+    setOpenMenuIndex(openMenuIndex === index ? null : index);
+  };
+
+  const updateMessage = async (messageId, newText) => {
+    if (!newText.trim()) return;
+    if (!messageId || !newText) {
+      console.error("Erro: ID ou novo texto está indefinido.");
+      return;
+    }
+
+    try {
+      const response = await api.put(`/messages/update/${messageId}`, {
+        novoConteudo: newText,
+      });
+
+      if (response.status === 200) {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === messageId ? { ...msg, conteudo: newText } : msg
+          )
+        );
+        setEditingMessageId(null);
+        setEditedText("");
+      } else {
+        console.error("❌ Erro ao atualizar mensagem");
+      }
+    } catch (error) {
+      console.error(
+        "❌ Erro ao se comunicar com o servidor:",
+        error.response?.data || error
+      );
+    }
+  };
+
+  const deleteMessage = async (index, messageId) => {
+    if (confirm("Tem certeza que deseja excluir esta mensagem?")) {
+      try {
+        const response = await api.delete(`/messages/delete/${messageId}`);
+
+        if (response.status === 200) {
+          setMessages((prevMessages) =>
+            prevMessages.filter((_, i) => i !== index)
+          );
+        } else {
+          console.error("❌ Erro ao excluir mensagem");
+        }
+      } catch (error) {
+        console.error("❌ Erro ao se comunicar com o servidor:", error);
+      }
+    }
+  };
+
+  console.log("ID do usuário logado:", userIdLogado);
+  console.log("currentUser", currentUser);
+
+  // Evita que o componente renderize prematuramente
+  if (!usuarioCarregado) {
+    return <div>🔐 Carregando informações do usuário...</div>;
+  }
 
   const renderStatusIcon = (status) => {
     switch (status) {
@@ -381,218 +1566,48 @@ function Chat() {
     }
   };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // 🧠 Problema provável: socket perde conexão ou muda de referência, mas você continua tentando emitir usando a antiga.
-  // 🔧 Solução: garantir que está emitindo via socketRef.current, que acompanha a referência mais atual, mesmo após reconexão.
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-
-    if (!destinatario?.id || !userId) {
-      console.warn("⚠️ Envio cancelado: destinatário ou usuário indefinido.");
-      return;
-    }
-
-    const socketAtual = socketRef.current;
-
-    if (!socketAtual || !socketAtual.connected) {
-      console.error("❌ Socket desconectado. Mensagem não enviada.");
-      return;
-    }
-
-    if (file) {
-      await uploadFile(file, file.name, getFileType(file.type));
-      setFile(null);
-      return;
-    }
-
-    if (newMessage.trim()) {
-      console.log("📤 Enviando mensagem para:", destinatario.id);
-
-      socketAtual.emit("sendPrivateMessage", {
-        conteudo: newMessage.trim(),
-        fromUserId: userId,
-        toUserId: destinatario.id,
-        tipoMidia: "texto",
-      });
-
-      setNewMessage("");
-    }
+  const obterClasseDaMensagem = (mensagem) => {
+    const remetenteId = mensagem.fromUserId || mensagem.userId;
+    return remetenteId === userIdLogado ? styles.sent : styles.received;
   };
-
-  const uploadFile = async (file, fileName, tipoMidia) => {
-    const formData = new FormData();
-    formData.append("file", file, fileName);
-    formData.append("fromUserId", userId); // ✅ nome correto
-    formData.append("toUserId", destinatario.id); // ✅ agora inclui o destinatário
-
-    try {
-      const response = await api.post("https://localhost:5000/upload", formData);
-      socket.emit("sendPrivateMessage", {
-        conteudo: response.data.midiaUrl,
-        fromUserId: userId,
-        toUserId: destinatario.id,
-        tipoMidia,
-      });
-    } catch (error) {
-      console.error("Erro ao enviar arquivo:", error);
-    }
-  };
-
-  const getFileType = (mimeType) => {
-    if (mimeType.startsWith("image/")) return "imagem";
-    if (mimeType.startsWith("audio/")) return "audio";
-    if (mimeType.startsWith("video/")) return "video";
-    if (mimeType === "application/pdf") return "pdf";
-    return "arquivo";
-  };
-
-  const startRecording = async () => {
-    if (isRecording) return; // Impede iniciar uma nova gravação se já estiver gravando
-
-    setIsRecording(true);
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-
-    mediaRecorderRef.current = mediaRecorder;
-    let chunks = [];
-
-    mediaRecorder.ondataavailable = (event) => {
-      chunks.push(event.data);
-    };
-
-    mediaRecorder.onstop = async () => {
-      setIsRecording(false);
-      const audioBlob = new Blob(chunks, { type: "audio/webm" });
-      await uploadFile(audioBlob, "audio.webm", "audio"); // Envia o arquivo de áudio após a gravação
-    };
-
-    mediaRecorder.start();
-  };
-
-  const stopRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== "inactive"
-    ) {
-      mediaRecorderRef.current.stop(); // Chama o stop apenas se a gravação estiver ativa
-    }
-  };
-
-  // funcao para mostrar o tempo da mensagem enviada
-  function formatTime(timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  }
-
-  // Estados para controlar o menu suspenso
-  // inicializa uma variável de estado com o valor null. Isso significa que, inicialmente, nenhum menu está aberto.
-  const [openMenuIndex, setOpenMenuIndex] = useState(null);
-
-  const toggleMenu = (index) => {
-    setOpenMenuIndex(openMenuIndex === index ? null : index);
-  };
-
-  const updateMessage = async (messageId, newText) => {
-    console.log("Tentando atualizar mensagem:", messageId, "para:", newText); // DEBUG
-
-    if (!newText.trim()) return; // Evita salvar mensagens vazias
-
-    if (!messageId || !newText) {
-      console.error("Erro: ID ou novo texto está indefinido.");
-      return;
-    }
-
-    try {
-      const response = await api.put(`/messages/update/${messageId}`, {
-        novoConteudo: newText, // Envia o novo texto para o backend // ✅ Agora enviamos "novoConteudo", que o backend espera
-      });
-      console.log("novaMensagem:", response);
-
-      if (response.status === 200) {
-        // Atualiza o estado das mensagens localmente após o sucesso
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.id === messageId ? { ...msg, conteudo: newText } : msg
-          )
-        );
-        setEditingMessageId(null); // Sai do modo de edição
-        setEditedText(""); // Limpa o campo de edição
-      } else {
-        console.error("Erro ao atualizar mensagem");
-      }
-    } catch (error) {
-      console.error(
-        "Erro ao se comunicar com o servidor",
-        error.response?.data || error
-      );
-    }
-  };
-
-  const deleteMessage = async (index, messageId) => {
-    if (confirm("Tem certeza que deseja excluir esta mensagem?")) {
-      try {
-        const response = await api.delete(`/messages/delete/${messageId}`);
-
-        if (response.status === 200) {
-          setMessages((prevMessages) =>
-            prevMessages.filter((_, i) => i !== index)
-          );
-        } else {
-          console.error("Erro ao excluir mensagem");
-        }
-      } catch (error) {
-        console.error("Erro ao se comunicar com o servidor", error);
-      }
-    }
-  };
-  console.log("ID do usuário logado:", userIdLogado);
-  console.log("currentUser", currentUser);
 
   return (
     <div className={styles.container}>
       <div className={styles.chat_layout}>
-        {/* Lado esquerdo - Lista de usuários */}
+        {/* Sidebar - Lista de usuários */}
+        {currentUser && (
+          <UserList
+            onSelectUser={(user) => {
+              if (user.id === currentUser.id) {
+                setDestinatario(null);
+                localStorage.removeItem(`destinatario_${currentUser.id}`);
+                return;
+              }
 
-        <>
-          {/* {currentUser && (
-        <>
-          <UserPanel
+              localStorage.setItem(
+                `destinatario_${currentUser.id}`,
+                JSON.stringify(user)
+              );
+              setDestinatario(user);
+
+              setUnreadCounts((prev) => {
+                const newCounts = { ...prev };
+                delete newCounts[user.id];
+                return newCounts;
+              });
+            }}
+            userIdLogado={currentUser.id}
+            selectedUserId={destinatario?.id}
+            destinatario={destinatario}
             currentUser={currentUser}
             setCurrentUser={setCurrentUser}
-            socketRef={socketRef}
-          /> */}
+            unreadCounts={unreadCounts}
+          />
+        )}
 
-          {currentUser && (
-            <UserList
-              onSelectUser={(user) => {
-                localStorage.setItem("destinatario", JSON.stringify(user));
-                setDestinatario(user);
-
-                // 🔥 Zerar contador de mensagens não lidas desse usuário
-                setUnreadCounts((prev) => {
-                  const newCounts = { ...prev };
-                  delete newCounts[user.id];
-                  return newCounts;
-                });
-              }}
-              userIdLogado={currentUser.id}
-              selectedUserId={destinatario?.id}
-              destinatario={destinatario}
-              currentUser={currentUser}
-              setCurrentUser={setCurrentUser}
-              unreadCounts={unreadCounts} // <--- Passa o unreadCounts aqui como prop
-            />
-          )}
-        </>
-
-        {/* <UserPanel currentUser={currentUser} onAvatarUpdated={handleAvatarUpdate} /> */}
-
-        {/* Lado direito - Conteúdo do chat */}
+        {/* Chat principal */}
         <div className={styles.chat_content}>
+          {/* Header do chat */}
           <div className={styles.chat_header}>
             <span className={styles.userName}>
               <img
@@ -604,185 +1619,123 @@ function Chat() {
                 }
                 alt="avatar do usuario"
                 onError={(e) => {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
                   e.target.src = "https://thumbs.dreamstime.com/b/%C3%ADcone-de-perfil-avatar-padr%C3%A3o-imagem-usu%C3%A1rio-m%C3%ADdia-social-210115353.jpg";
                 }}
               />
 
               {destinatario?.name || "desconhecido"}
+=======
+=======
+>>>>>>> Stashed changes
+                  e.target.src =
+                    "https://thumbs.dreamstime.com/b/%C3%ADcone-de-perfil-avatar-padr%C3%A3o-imagem-usu%C3%A1rio-m%C3%ADdia-social-210115353.jpg";
+                }}
+              />
+              {destinatario?.name || "Desconhecido"}
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             </span>
 
             <div className={styles.headerActions}>
               <label className={styles.uploadButton}>
-                <MdFileUpload title="upload de arquivos" />
+                <MdFileUpload title="Upload de arquivos" />
                 <input
                   type="file"
                   onChange={(e) => setFile(e.target.files[0])}
                 />
               </label>
-
               {file && <span className={styles.fileName}>{file.name}</span>}
 
               <VideoChat
                 userId={userIdLogado}
                 selectedUserId={destinatario?.id}
-                userName={userName}
               />
             </div>
           </div>
 
+          {/* Lista de mensagens */}
           <ul className={styles.messages}>
-            {messages
-              .filter((message) => {
-                return (
-                  (message.userId === userId &&
-                    message.destinatarioId === destinatario?.id) ||
-                  (message.userId === destinatario?.id &&
-                    message.destinatarioId === userId)
-                );
-              })
-              .map((message, index) => (
-                <li
-                  key={message.id}
-                  className={
-                    message.userId === userId ? styles.sent : styles.received
-                  }
-                >
-                  <div className={styles.messageHeader}>
-                    <span>{message.user?.name || "Desconhecido"}</span>
-                    <div className={styles.moreOptionsContainer}>
-                      <MdMoreVert
-                        className={styles.moreOptions}
-                        onClick={() => toggleMenu(index)}
-                      />
-                      {openMenuIndex === index && (
-                        <div className={styles.dropdownMenu}>
-                          <button
-                            onClick={() => deleteMessage(index, message.id)}
-                          >
-                            Excluir
-                          </button>
-                          <button
-                            onClick={() => setEditingMessageId(message.id)}
-                          >
-                            Editar
-                          </button>
-                        </div>
-                      )}
-                    </div>
+            {mensagensAtuais.length === 0 && <p>Nenhuma mensagem</p>}
+            {mensagensAtuais.map((message, index) => (
+              <li key={message.id} className={obterClasseDaMensagem(message)}>
+                <div className={styles.messageHeader}>
+                  <div>
+                    {message.user?.name && (
+                      <strong>{message.user.name}</strong> // apenas o nome
+                    )}
+                    {/* <div>
+                      {message.plainText || "Mensagem não pôde ser lida."}
+                    </div> */}
                   </div>
 
-                  {editingMessageId === message.id ? (
-                    <div className={styles.editContainer}>
-                      <input
-                        type="text"
-                        value={editedText || ""}
-                        onChange={(e) => setEditedText(e.target.value)}
+                  <div className={styles.moreOptionsContainer}>
+                    <MdMoreVert
+                      className={styles.moreOptions}
+                      onClick={() => toggleMenu(index)}
+                    />
+                    {openMenuIndex === index && (
+                      <div className={styles.dropdownMenu}>
+                        <button
+                          onClick={() => deleteMessage(index, message.id)}
+                        >
+                          Excluir
+                        </button>
+                        <button onClick={() => setEditingMessageId(message.id)}>
+                          Editar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {editingMessageId === message.id ? (
+                  <div className={styles.editContainer}>
+                    <input
+                      type="text"
+                      value={editedText || ""}
+                      onChange={(e) => setEditedText(e.target.value)}
+                    />
+                    <button
+                      onClick={() => updateMessage(message.id, editedText)}
+                    >
+                      Salvar
+                    </button>
+                    <button onClick={() => setEditingMessageId(null)}>
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {message.tipoMidia === "imagem" ? (
+                      <img
+                        src={message.conteudo}
+                        alt="Imagem enviada"
+                        className={styles.media}
                       />
-                      <button
-                        onClick={() => updateMessage(message.id, editedText)}
-                      >
-                        Salvar
-                      </button>
-                      <button onClick={() => setEditingMessageId(null)}>
-                        Cancelar
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      {message.tipoMidia === "imagem" ? (
-                        <img
-                          src={message.conteudo}
-                          alt="Imagem enviada"
-                          className={styles.media}
-                        />
-                      ) : message.tipoMidia === "audio" ? (
-                        <audio controls>
-                          <source src={message.conteudo} type="audio/webm" />
-                          Seu navegador não suporta áudio.
-                        </audio>
-                      ) : message.tipoMidia === "video" ? (
-                        <video controls className={styles.video}>
-                          <source src={message.conteudo} type="video/mp4" />
-                          Seu navegador não suporta vídeos.
-                        </video>
-                      ) : message.tipoMidia === "pdf" ? (
-                        <div className={styles.pdfContainer}>
-                          <div className={styles.pdfHeader}>
-                            <span className={styles.pdfIcon}>
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="40"
-                                height="40"
-                                viewBox="0 0 64 64"
-                              >
-                                <defs>
-                                  <linearGradient
-                                    id="grad"
-                                    x1="0%"
-                                    y1="0%"
-                                    x2="100%"
-                                    y2="100%"
-                                  >
-                                    <stop
-                                      offset="0%"
-                                      style={{
-                                        stopColor: "#f44336",
-                                        stopOpacity: 1,
-                                      }}
-                                    />
-                                    <stop
-                                      offset="100%"
-                                      style={{
-                                        stopColor: "#c62828",
-                                        stopOpacity: 1,
-                                      }}
-                                    />
-                                  </linearGradient>
-                                </defs>
-                                <g>
-                                  <path
-                                    d="M8 4h32l16 16v40c0 2.2-1.8 4-4 4H8c-2.2 0-4-1.8-4-4V8c0-2.2 1.8-4 4-4z"
-                                    fill="url(#grad)"
-                                  />
-                                  <path d="M40 4v16h16L40 4z" fill="#e57373" />
-                                  <text
-                                    x="14"
-                                    y="50"
-                                    fontSize="18"
-                                    fontWeight="bold"
-                                    fill="white"
-                                    fontFamily="Arial, sans-serif"
-                                  >
-                                    PDF
-                                  </text>
-                                </g>
-                              </svg>
-                            </span>
-
-                            <span className={styles.pdfLabel}>
-                              Visualização do PDF
-                            </span>
-                          </div>
-
-                          <div className={styles.pdfBox}>
-                            <iframe
-                              src={message.conteudo}
-                              title="Visualizador de PDF"
-                              className={styles.pdfIframe}
-                              frameBorder="0"
-                            ></iframe>
-                          </div>
-
-                          <a
-                            href={message.conteudo}
-                            download
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={styles.pdfDownload}
-                          >
-                            📥 Baixar PDF
-                          </a>
+                    ) : message.tipoMidia === "audio" ? (
+                      <audio controls>
+                        <source src={message.conteudo} type="audio/webm" />
+                        Seu navegador não suporta áudio.
+                      </audio>
+                    ) : message.tipoMidia === "video" ? (
+                      <video controls className={styles.video}>
+                        <source src={message.conteudo} type="video/mp4" />
+                        Seu navegador não suporta vídeos.
+                      </video>
+                    ) : message.tipoMidia === "pdf" ? (
+                      <div className={styles.pdfContainer}>
+                        <div className={styles.pdfHeader}>
+                          <span className={styles.pdfIcon}>📄</span>
+                          <span className={styles.pdfLabel}>
+                            Visualização do PDF
+                          </span>
                         </div>
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
                       ) : (
                         <p className={styles.iconEcheckList}>
                           {message.conteudo}
@@ -798,13 +1751,53 @@ function Chat() {
                       <div className={styles.messageTime}>
                         {formatTime(message.timestamp)}
                       </div>
+=======
+=======
+>>>>>>> Stashed changes
+                        <div className={styles.pdfBox}>
+                          <iframe
+                            src={message.conteudo}
+                            title="Visualizador de PDF"
+                            className={styles.pdfIframe}
+                            frameBorder="0"
+                          ></iframe>
+                        </div>
+                        <a
+                          href={message.conteudo}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.pdfDownload}
+                        >
+                          📥 Baixar PDF
+                        </a>
+                      </div>
+                    ) : (
+                      <p className={styles.iconEcheckList}>
+                        {message.plainText || message.conteudo}
+                        {message.userId === userIdLogado && (
+                          <span className={styles.statusIcon}>
+                            {renderStatusIcon(message.status)}
+                          </span>
+                        )}
+                      </p>
+                    )}
+
+                    <div className={styles.messageTime}>
+                      {formatTime(message.timestamp)}
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
                     </div>
-                  )}
-                </li>
-              ))}
+                  </div>
+                )}
+              </li>
+            ))}
             <div ref={messagesEndRef} />
           </ul>
 
+          {/* Formulário de envio */}
           <form className={styles.form} onSubmit={sendMessage}>
             <span
               type="button"

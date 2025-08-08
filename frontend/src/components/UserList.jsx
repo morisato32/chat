@@ -16,14 +16,17 @@ function UserList({
   const socketRef = useRef(null);
 
   // Buscar todos os usuários
-  const fetchUsers = async () => {
-    try {
-      const response = await api.get("/users");
-      setUsers(response.data);
-    } catch (err) {
-      console.error("Erro ao buscar usuários", err);
-    }
-  };
+ const fetchUsers = async () => {
+  try {
+    const response = await api.get("/users", {
+      params: { userId: userIdLogado }
+    });
+    setUsers(response.data);
+  } catch (err) {
+    console.error("Erro ao buscar usuários", err);
+  }
+};
+
 
   // Buscar ao logar
   useEffect(() => {
@@ -47,6 +50,9 @@ function UserList({
       query: { userId: userIdLogado },
     });
 
+     // ✅ Emitir o registro para o servidor
+  socketRef.current.emit("register", userIdLogado);
+
     socketRef.current.on("online-users", (userIds) => {
       const estadoOnline = {};
       userIds.forEach((id) => {
@@ -63,9 +69,13 @@ function UserList({
       );
     });
 
-    socketRef.current.on("novoUsuario", (novoUser) => {
-      setUsers((prev) => [...prev, novoUser]);
-    });
+   socketRef.current.on("novoUsuario", (novoUser) => {
+  setUsers((prev) => {
+    const exists = prev.some((u) => u.id === novoUser.id);
+    return exists ? prev : [...prev, novoUser];
+  });
+});
+
 
     return () => {
       socketRef.current.disconnect();
@@ -113,7 +123,7 @@ function UserList({
         <UserPanel
           currentUser={currentUser}
           setCurrentUser={setCurrentUser}
-          socket={socketRef.current}
+          socketRef={socketRef}
           unreadCounts={unreadCounts}
         />
       </div>
